@@ -37,7 +37,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 
 /**
- * utility class provide common operations for java(x) security keys
+ * utility class provide common operations for java(jca,jce) security keys
  *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
@@ -56,11 +56,14 @@ public abstract class SecretKeys {
     public static final String ALGORITHM_KEY_HMAC_SHA512 = "HmacSHA512";
 
 
-
     public static final String ALGORITHM_KEYPAIR_EC = "EC";
     public static final String ALGORITHM_KEYPAIR_DH = "DH";
     public static final String ALGORITHM_KEYPAIR_RSA = "RSA";
     public static final String ALGORITHM_KEYPAIR_DSA = "DSA";
+    public static final String ALGORITHM_KEYPAIR_DIFFIEHELLMAN = "DiffieHellman";
+
+    public static final String KEY_STORE_TYPE_JKS = "JKS";
+    public static final String KEY_STORE_TYPE_PKCS12 = "PKCS12";
 
 
     private static final Map<String, Queue<KeyGenerator>> keyGenerators = Maps.newConcurrentMap();
@@ -217,7 +220,7 @@ public abstract class SecretKeys {
      */
     public static KeyStore loadJks(InputStream in, String password) {
         try {
-            KeyStore keyStore = KeyStore.getInstance("JKS");
+            KeyStore keyStore = KeyStore.getInstance(KEY_STORE_TYPE_JKS);
             keyStore.load(in, password.toCharArray());
             return keyStore;
         } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
@@ -238,7 +241,7 @@ public abstract class SecretKeys {
      */
     public static KeyStore loadPkcs12(InputStream in, String password) {
         try {
-            KeyStore keyStore = KeyStore.getInstance("PKCS12");
+            KeyStore keyStore = KeyStore.getInstance(KEY_STORE_TYPE_PKCS12);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             byte[] buf = new byte[8192];
             int numRead;
@@ -256,7 +259,7 @@ public abstract class SecretKeys {
     }
 
 
-    public static void main(String[] args)  {
+    public static void main(String[] args) {
 
         for (Provider p : Security.getProviders()) {
             System.out.println("Provider:" + p.getName() + ":" + p.getVersion());

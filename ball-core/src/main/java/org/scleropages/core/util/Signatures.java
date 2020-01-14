@@ -19,7 +19,11 @@ import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.crypto.Mac;
+import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.util.Map;
@@ -28,7 +32,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 
 /**
- * utility class provide common operations for java security signature
+ * utility class provide common operations for java(jca,jce) security signature
  *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
@@ -102,6 +106,11 @@ public abstract class Signatures {
      */
     public interface SignatureProvider {
 
+
+        void initSign(Key key);
+
+        void initVerify(Key key);
+
         /**
          * Updates the data to be signed or verified, using the specified
          * array of bytes.
@@ -140,12 +149,33 @@ public abstract class Signatures {
     }
 
 
+    /**
+     * provide RSA,DSA... signatures
+     */
     private static class DefaultSign implements SignatureProvider {
 
         private final Signature signature;
 
         private DefaultSign(Signature signature) {
             this.signature = signature;
+        }
+
+        @Override
+        public void initSign(Key key) {
+            try {
+                signature.initSign((PrivateKey) key);
+            } catch (InvalidKeyException e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
+
+        @Override
+        public void initVerify(Key key) {
+            try {
+                signature.initVerify((PublicKey) key);
+            } catch (InvalidKeyException e) {
+                throw new IllegalArgumentException(e);
+            }
         }
 
         @Override
@@ -170,12 +200,33 @@ public abstract class Signatures {
 
     }
 
+    /**
+     * Hmac implementation.
+     */
     private static class HmacSign implements SignatureProvider {
 
         private final Mac mac;
 
         private HmacSign(Mac mac) {
             this.mac = mac;
+        }
+
+        @Override
+        public void initSign(Key key) {
+            try {
+                mac.init(key);
+            } catch (InvalidKeyException e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
+
+        @Override
+        public void initVerify(Key key) {
+            try {
+                mac.init(key);
+            } catch (InvalidKeyException e) {
+                throw new IllegalArgumentException(e);
+            }
         }
 
         @Override
