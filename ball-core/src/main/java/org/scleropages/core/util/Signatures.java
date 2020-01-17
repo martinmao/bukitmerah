@@ -107,9 +107,22 @@ public abstract class Signatures {
     public interface SignatureProvider {
 
 
-        void initSign(Key key);
+        /**
+         * init given key for sign.
+         *
+         * @param key
+         * @throws InvalidKeyException
+         */
+        void initSign(Key key) throws InvalidKeyException;
 
-        void initVerify(Key key);
+        /**
+         * init given key for sign-verify.
+         *
+         * @param key
+         * @throws InvalidKeyException
+         */
+        void initVerify(Key key) throws InvalidKeyException;
+
 
         /**
          * Updates the data to be signed or verified, using the specified
@@ -161,21 +174,13 @@ public abstract class Signatures {
         }
 
         @Override
-        public void initSign(Key key) {
-            try {
-                signature.initSign((PrivateKey) key);
-            } catch (InvalidKeyException e) {
-                throw new IllegalArgumentException(e);
-            }
+        public void initSign(Key key) throws InvalidKeyException {
+            signature.initSign((PrivateKey) key);
         }
 
         @Override
-        public void initVerify(Key key) {
-            try {
-                signature.initVerify((PublicKey) key);
-            } catch (InvalidKeyException e) {
-                throw new IllegalArgumentException(e);
-            }
+        public void initVerify(Key key) throws InvalidKeyException {
+            signature.initVerify((PublicKey) key);
         }
 
         @Override
@@ -212,21 +217,13 @@ public abstract class Signatures {
         }
 
         @Override
-        public void initSign(Key key) {
-            try {
-                mac.init(key);
-            } catch (InvalidKeyException e) {
-                throw new IllegalArgumentException(e);
-            }
+        public void initSign(Key key) throws InvalidKeyException {
+            mac.init(key);
         }
 
         @Override
-        public void initVerify(Key key) {
-            try {
-                mac.init(key);
-            } catch (InvalidKeyException e) {
-                throw new IllegalArgumentException(e);
-            }
+        public void initVerify(Key key) throws InvalidKeyException {
+            mac.init(key);
         }
 
         @Override
