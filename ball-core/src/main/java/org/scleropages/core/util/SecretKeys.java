@@ -15,7 +15,9 @@
  */
 package org.scleropages.core.util;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.apache.commons.lang3.ArrayUtils;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
@@ -25,12 +27,16 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -47,6 +53,7 @@ public abstract class SecretKeys {
     public static final String ALGORITHM_KEY_AES = "AES";
     public static final String ALGORITHM_KEY_DES = "DES";
     public static final String ALGORITHM_KEY_DES_EDE = "DESede";
+    public static final String ALGORITHM_KEY_BLOWFISH = "Blowfish";
 
 
     public static final String ALGORITHM_KEY_HMAC_MD5 = "HmacMD5";
@@ -66,6 +73,33 @@ public abstract class SecretKeys {
     public static final String KEY_STORE_TYPE_PKCS12 = "PKCS12";
 
 
+    public static final String[] SUPPORT_KEY_ALG;
+
+    public static final String[] SUPPORT_KEYPAIR_ALG;
+
+    static {
+        List<String> SUPPORT_KEY_ALG_LIST = Lists.newArrayList();
+        List<String> SUPPORT_KEYPAIR_ALG_LIST = Lists.newArrayList();
+
+        for (Field field :
+                SecretKeys.class.getFields()) {
+            if (Modifier.isStatic(field.getModifiers()) && Modifier.isPublic(field.getModifiers())) {
+                try {
+                    if (field.getName().startsWith("ALGORITHM_KEY_")) {
+                        SUPPORT_KEY_ALG_LIST.add(String.valueOf(field.get(null)));
+                    } else if (field.getName().startsWith("ALGORITHM_KEYPAIR_")) {
+                        SUPPORT_KEYPAIR_ALG_LIST.add(String.valueOf(field.get(null)));
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        SUPPORT_KEY_ALG = SUPPORT_KEY_ALG_LIST.toArray(new String[SUPPORT_KEY_ALG_LIST.size()]);
+        SUPPORT_KEYPAIR_ALG = SUPPORT_KEYPAIR_ALG_LIST.toArray(new String[SUPPORT_KEYPAIR_ALG_LIST.size()]);
+    }
+
+
     private static final Map<String, Queue<KeyGenerator>> keyGenerators = Maps.newConcurrentMap();
 
     private static final Map<String, Queue<KeyPairGenerator>> keyPairGenerators = Maps.newConcurrentMap();
@@ -75,6 +109,27 @@ public abstract class SecretKeys {
     }
 
     public interface KeyPairGeneratorInitializer extends Consumer<KeyPairGenerator> {
+    }
+
+
+    /**
+     * Return true if given alg name is {@link SecretKey}.The result only match {@link #SUPPORT_KEY_ALG} definitions.
+     *
+     * @param alg
+     * @return
+     */
+    public static boolean isKeyAlgorithm(String alg) {
+        return ArrayUtils.contains(SUPPORT_KEY_ALG, alg);
+    }
+
+    /**
+     * Return true if given alg name is {@link KeyPair}.The result only match {@link #SUPPORT_KEYPAIR_ALG} definitions.
+     *
+     * @param alg
+     * @return
+     */
+    public static boolean isKeyPairAlgorithm(String alg) {
+        return ArrayUtils.contains(SUPPORT_KEYPAIR_ALG, alg);
     }
 
     /**
@@ -260,6 +315,9 @@ public abstract class SecretKeys {
 
 
     public static void main(String[] args) {
+
+        System.out.println(Arrays.toString(SUPPORT_KEY_ALG));
+        System.out.println(Arrays.toString(SUPPORT_KEYPAIR_ALG));
 
         for (Provider p : Security.getProviders()) {
             System.out.println("Provider:" + p.getName() + ":" + p.getVersion());
