@@ -71,6 +71,16 @@ public abstract class Signatures {
 
 
     /**
+     * Return true if given alg is signature algorithm.
+     *
+     * @param alg
+     * @return
+     */
+    public static boolean isSignatureAlgorithm(String alg) {
+        return SecretKeys.findServiceTypeAndAlgorithmMatch("Signature", alg);
+    }
+
+    /**
      * perform sign or verify with specify algorithm and {@link Signer}<br>
      * {@link Signer} conceptually similar {@link Signature} provide a high level interface to process signature sign and verify.
      *

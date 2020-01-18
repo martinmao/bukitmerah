@@ -113,23 +113,43 @@ public abstract class SecretKeys {
 
 
     /**
-     * Return true if given alg name is {@link SecretKey}.The result only match {@link #SUPPORT_KEY_ALG} definitions.
+     * Return true if given alg name is {@link SecretKey}.
      *
      * @param alg
      * @return
      */
     public static boolean isKeyAlgorithm(String alg) {
-        return ArrayUtils.contains(SUPPORT_KEY_ALG, alg);
+        return ArrayUtils.contains(SUPPORT_KEY_ALG, alg) || findServiceTypeAndAlgorithmMatch("KeyGenerator", alg);
     }
 
+
     /**
-     * Return true if given alg name is {@link KeyPair}.The result only match {@link #SUPPORT_KEYPAIR_ALG} definitions.
+     * Return true if given alg name is {@link KeyPair}.
      *
      * @param alg
      * @return
      */
     public static boolean isKeyPairAlgorithm(String alg) {
-        return ArrayUtils.contains(SUPPORT_KEYPAIR_ALG, alg);
+        return ArrayUtils.contains(SUPPORT_KEYPAIR_ALG, alg) || findServiceTypeAndAlgorithmMatch("KeyPairGenerator", alg);
+    }
+
+
+    /**
+     * Return true if jca(jce) security provider support service type and algorithm matches given parameter.
+     *
+     * @param type
+     * @param alg
+     * @return
+     */
+    public static boolean findServiceTypeAndAlgorithmMatch(String type, String alg) {
+        for (Provider p : Security.getProviders()) {
+            for (Provider.Service s : p.getServices()) {
+                if (s.getType().equals(type) && s.getAlgorithm().equals(alg)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
