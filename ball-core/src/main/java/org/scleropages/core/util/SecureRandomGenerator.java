@@ -138,8 +138,9 @@ public class SecureRandomGenerator implements RandomGenerator {
         // Force seeding to take place
         result.nextInt();
 
-        if ((System.currentTimeMillis() - t1) > 100) {
-            logger.warn("Too much time to create secure-random.");
+        long watch;
+        if ((watch = System.currentTimeMillis() - t1) > 100) {
+            logger.warn("Too much time to create secure-random: " + watch);
         }
         return result;
     }
