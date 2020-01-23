@@ -140,7 +140,7 @@ public class SecureRandomGenerator implements RandomGenerator {
 
         long watch;
         if ((watch = System.currentTimeMillis() - t1) > 100) {
-            logger.warn("Too much time to create secure-random: " + watch);
+            logger.warn("Too much time[{}>100] to create secure-random: ", watch);
         }
         return result;
     }
