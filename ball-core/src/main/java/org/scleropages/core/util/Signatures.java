@@ -77,7 +77,8 @@ public abstract class Signatures {
      * @return
      */
     public static boolean isSignatureAlgorithm(String alg) {
-        return SecretKeys.findServiceTypeAndAlgorithmMatch("Signature", alg);
+        return SecretKeys.findServiceTypeAndAlgorithmMatch("Signature", alg)
+                || SecretKeys.findServiceTypeAndAlgorithmMatch("Mac", alg);
     }
 
     /**
@@ -102,6 +103,7 @@ public abstract class Signatures {
                 signer.accept(signatureProvider);
                 providerQueue.add(signatureProvider);
             } catch (NoSuchAlgorithmException e) {
+                Signatures.signatureProviders.remove(algorithm);
                 throw new IllegalArgumentException(e);
             }
     }
