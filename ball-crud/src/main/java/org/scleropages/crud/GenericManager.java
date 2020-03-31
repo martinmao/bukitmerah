@@ -15,17 +15,12 @@
  */
 package org.scleropages.crud;
 
-import com.google.common.collect.Maps;
 import org.scleropages.crud.exception.BizViolationException;
 import org.scleropages.crud.orm.ModelMapper;
 import org.scleropages.crud.orm.ModelMapperRepository;
 import org.scleropages.crud.types.Available;
-import org.springframework.core.ResolvableType;
-import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
 
 import javax.validation.Valid;
-import java.util.Map;
 
 /**
  * Base manager for business models.

@@ -25,6 +25,12 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jooq</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
             <groupId>javax.persistence</groupId>
             <artifactId>javax.persistence-api</artifactId>
             <scope>compile</scope>
