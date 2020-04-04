@@ -46,7 +46,7 @@ public abstract class SortBuilder {
 
     /**
      * Sort_fields parameter's value format is:
-     * FieldName1_FieldName2_FieldName...
+     * FieldName1_FieldName2_FieldNameN...
      *
      * @param sortParams
      * @param defaultSort

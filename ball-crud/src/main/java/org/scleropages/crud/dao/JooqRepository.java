@@ -15,16 +15,9 @@
  */
 package org.scleropages.crud.dao;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
-import org.jooq.Condition;
-import org.jooq.DSLContext;
-import org.jooq.Field;
-import org.jooq.Keyword;
-import org.jooq.Param;
-import org.jooq.Select;
-import org.jooq.SelectLimitPercentAfterOffsetStep;
-import org.jooq.SelectLimitStep;
-import org.jooq.Table;
+import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.scleropages.crud.FrameworkContext;
 import org.springframework.data.domain.Page;
@@ -38,7 +31,7 @@ import static org.jooq.impl.DSL.*;
 
 /**
  * Support for jOOQ.
- * This interface is complement for {@link org.scleropages.crud.orm.jpa.GenericRepository}.
+ * This interface can complement for {@link org.scleropages.crud.orm.jpa.GenericRepository}.
  *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
@@ -55,46 +48,85 @@ public interface JooqRepository {
     }
 
     /**
-     * Apply spring data {@link Pageable} to current select.
+     * Apply spring data {@link Pageable} to given select.
      *
      * @param select
      * @param pageable
      * @return
      */
-    default SelectLimitPercentAfterOffsetStep pageable(SelectLimitStep select, Pageable pageable) {
-        return select.offset(pageable.getOffset()).limit(pageable.getPageSize());
+    default void pageable(SelectFromStep select, Pageable pageable) {
+        Assert.notNull(select, "select mut not be null.");
+        Assert.notNull(pageable, "pageable must not be null.");
+        if (null != pageable.getSort()) {
+            List<OrderField> orderFields = Lists.newArrayList();
+            pageable.getSort().forEach(order -> {
+                Field orderField = nameToField(order.getProperty());
+                orderFields.add(order.getDirection().isAscending() ? orderField.asc() : orderField.desc());
+            });
+            select.orderBy(orderFields);
+        }
+        if (pageable.isPaged())
+            select.offset(pageable.getOffset()).limit(pageable.getPageSize());
     }
 
+
     /**
-     * Create spring data {@link Page}.
+     * Create spring data {@link Page} by given content(any query result).
      *
-     * @param content  query results.
+     * @param content
      * @param pageable
      * @param select
+     * @param useCountWrapped
      * @param <T>
      * @return
      */
-    default <T> Page<T> page(List<T> content, Pageable pageable, SelectLimitStep select) {
-
+    default <T> Page<T> page(List<T> content, Pageable pageable, SelectFromStep select, boolean useCountWrapped) {
         Assert.notNull(select, "select must not be null.");
-        return PageableExecutionUtils.getPage(content, pageable, () -> {
-            String sql = select.getSQL().toLowerCase();
-            String[] splitByFirstFrom = org.springframework.util.StringUtils.split(sql, "from");
-            Assert.notNull(splitByFirstFrom, "invalid sql. can not split by 'from' fragment. ");
-            sql = " from " + splitByFirstFrom[1];
-            sql = StringUtils.substringBefore(sql, "order by");
-            String countFragment = splitByFirstFrom[0].contains("distinct") ?
-                    StringUtils.replace(splitByFirstFrom[0], "select", "select count(") + ")" :
-                    "select count(*)";
-            sql = countFragment + sql;
-            return (Long) dslContext().fetchOne(sql, select.getBindValues()).get(0);
-        });
+        return PageableExecutionUtils.getPage(content, pageable, () -> fetchCount(select, useCountWrapped));
     }
+
+
+    /**
+     * Create spring data {@link Page} by given select
+     *
+     * @param select
+     * @param pageable
+     * @param useCountWrapped
+     * @return
+     */
+    default Page<? extends Record> page(SelectFromStep<? extends Record> select, Pageable pageable, boolean useCountWrapped) {
+        pageable(select, pageable);
+        return page(select.fetch(), pageable, select, useCountWrapped);
+    }
+
+    /**
+     * query number of count results by given select.
+     *
+     * @param select
+     * @param useCountWrapped use select count(*) from ( given select).
+     * @return
+     */
+    default Long fetchCount(SelectFromStep select, boolean useCountWrapped) {
+        if (useCountWrapped)
+            return Long.valueOf(dslContext().fetchCount(select));
+        String sql = select.getSQL().toLowerCase();
+        String[] splitByFirstFrom = org.springframework.util.StringUtils.split(sql, "from");
+        Assert.notNull(splitByFirstFrom, "invalid sql. can not split by 'from' fragment. ");
+        sql = " from " + splitByFirstFrom[1];
+        sql = StringUtils.substringBefore(sql, "order by");
+        String countFragment = splitByFirstFrom[0].contains("distinct") ?
+                StringUtils.replace(splitByFirstFrom[0], "select", "select count(") + ")" :
+                "select count(*)";
+        sql = countFragment + sql;
+        return Long.valueOf(dslContext().fetchOne(sql, select.getBindValues()).get(0).toString());
+    }
+
 
     /**
      * <code><pre>
      * String sql = "(X = ? and Y = ?)";
      * Object[] bindings = new Object[] { 1, 2 };</pre></code>
+     *
      * @param sql
      * @param bindings
      * @return
@@ -103,17 +135,38 @@ public interface JooqRepository {
         return condition(sql, bindings);
     }
 
+    /**
+     * <code><pre>
+     * field.eq(25);
+     * </pre></code>
+     *
+     * @param field
+     * @return
+     */
     default Condition conditionField(Field<Boolean> field) {
         return condition(field);
     }
 
+    /**
+     * conjunction a set of conditions use 'and' operator.
+     *
+     * @param conditions
+     * @return
+     */
     default Condition conditionsAnd(Condition... conditions) {
         return and(conditions);
     }
 
+    /**
+     * conjunction a set of conditions use 'or' operator.
+     *
+     * @param conditions
+     * @return
+     */
     default Condition conditionsOr(Condition... conditions) {
         return or(conditions);
     }
+
 
     default Condition conditionExists(Select select) {
         return exists(select);
@@ -147,26 +200,61 @@ public interface JooqRepository {
      *    .fetch();
      *
      * </pre></code>
+     *
      * @return
      */
     default Condition conditionNo() {
         return noCondition();
     }
 
+    /**
+     * create condition always return true.
+     *
+     * @return
+     */
     default Condition conditionTrue() {
         return trueCondition();
     }
 
+    /**
+     * create condition always return false.
+     *
+     * @return
+     */
     default Condition conditionFalse() {
         return falseCondition();
     }
 
-    default Table nameToTable(String... qualifiedName) {
-        return table(name(qualifiedName));
+    /**
+     * create table by given qualifiedNames
+     *
+     * @param qualifiedName
+     * @return
+     */
+    default Table nameToTable(String... qualifiedNames) {
+        return table(name(qualifiedNames));
     }
 
-    default <T> Field<T> nameToField(Class<T> type, String... qualifiedName) {
-        return field(name(qualifiedName),type);
+    /**
+     * create field by given qualifiedNames(type-safety.)
+     *
+     * @param type
+     * @param qualifiedNames
+     * @param <T>
+     * @return
+     */
+    default <T> Field<T> nameToField(Class<T> type, String... qualifiedNames) {
+        return field(name(qualifiedNames), type);
+    }
+
+    /**
+     * create field by given qualifiedNames
+     *
+     * @param qualifiedNames
+     * @return
+     */
+    default Field nameToField(String... qualifiedNames) {
+        return field(name(qualifiedNames));
     }
 
     /**
@@ -180,7 +268,7 @@ public interface JooqRepository {
      *    .and(T.D.eq(2))
      *    .fetch();
      *
-     *-------------------------------------------------------------------
+     * -------------------------------------------------------------------
      *
      *
      * // First union subquery has a conditionally projected column
@@ -196,7 +284,7 @@ public interface JooqRepository {
      *    .from(U))
      *    .fetch();
      *
-     *-------------------------------------------------------------------
+     * -------------------------------------------------------------------
      *
      * ctx.select(T.A, T.B)
      *    .from(T)
@@ -207,7 +295,7 @@ public interface JooqRepository {
      *    )
      *    .fetch();
      *
-     *-------------------------------------------------------------------
+     * -------------------------------------------------------------------
      *
      * ctx.select(
      *       T.A,
@@ -234,10 +322,11 @@ public interface JooqRepository {
 
     /**
      * sysdate,current_timestamp...
+     *
      * @param keyWord
      * @return
      */
-    default Keyword keyWord(String keyWord){
+    default Keyword keyWord(String keyWord) {
         return DSL.keyword(keyWord);
     }
 }
