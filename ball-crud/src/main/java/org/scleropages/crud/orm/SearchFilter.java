@@ -71,12 +71,11 @@ public class SearchFilter {
                     continue;
                 }
                 SearchFilter filter = null;
-                // 拆分operator与filedAttribute
+
                 String[] names = StringUtils.split(key, "_");
-                /* default. used EQ as operator */
-                if (names.length == 1) {
+                if (names.length == 1) {/* no operator and conjunction. by default. used EQ as operator */
                     filter = new SearchFilter(names[0], Operator.EQ, value);
-                } else if (names.length == 2) {
+                } else if (names.length == 2) {/* no conjunction. apply operator and field*/
                     filter = new SearchFilter(names[1], Operator.valueOf(names[0]), value);
                 } else if (names.length > 2) {
                     String[] fields = new String[]{};
