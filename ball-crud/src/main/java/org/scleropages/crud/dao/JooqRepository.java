@@ -22,20 +22,29 @@ import org.jooq.impl.DSL;
 import org.scleropages.crud.FrameworkContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.util.Assert;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.jooq.impl.DSL.*;
 
 /**
  * Support for jOOQ.
+ * <pre>
  * This interface can complement for {@link org.scleropages.crud.orm.jpa.GenericRepository}.
+ * many of method arguments is a subclasses of Reactive({@link org.reactivestreams.Publisher}) implementations(eg:{@link Select} subclasses). but that is not compatibility with spring data-jpa.
+ * it will throw "org.springframework.dao.InvalidDataAccessApiUsageException: Reactive Repositories are not supported by JPA."
+ * so wrapped these arguments as a {@link Supplier}.
+ * The declaration of generic type of 0 is Jooq {@link Table} implementation. and 1 is entity type (annotated with {@link javax.persistence.Entity}) .
+ * </pre>
  *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
-public interface JooqRepository {
+@NoRepositoryBean
+public interface JooqRepository<R, T> {
 
 
     /**
@@ -47,6 +56,7 @@ public interface JooqRepository {
         return FrameworkContext.getBean(DSLContext.class);
     }
 
+
     /**
      * Apply spring data {@link Pageable} to given select.
      *
@@ -54,7 +64,7 @@ public interface JooqRepository {
      * @param pageable
      * @return
      */
-    default void pageable(SelectFromStep select, Pageable pageable) {
+    default void pageable(Supplier<SelectFromStep> select, Pageable pageable) {
         Assert.notNull(select, "select mut not be null.");
         Assert.notNull(pageable, "pageable must not be null.");
         if (null != pageable.getSort()) {
@@ -63,10 +73,10 @@ public interface JooqRepository {
                 Field orderField = nameToField(order.getProperty());
                 orderFields.add(order.getDirection().isAscending() ? orderField.asc() : orderField.desc());
             });
-            select.orderBy(orderFields);
+            select.get().orderBy(orderFields);
         }
         if (pageable.isPaged())
-            select.offset(pageable.getOffset()).limit(pageable.getPageSize());
+            select.get().offset(pageable.getOffset()).limit(pageable.getPageSize());
     }
 
 
@@ -80,7 +90,7 @@ public interface JooqRepository {
      * @param <T>
      * @return
      */
-    default <T> Page<T> page(List<T> content, Pageable pageable, SelectFromStep select, boolean useCountWrapped) {
+    default <E> Page<E> page(List<E> content, Pageable pageable, Supplier<SelectFromStep> select, boolean useCountWrapped) {
         Assert.notNull(select, "select must not be null.");
         return PageableExecutionUtils.getPage(content, pageable, () -> fetchCount(select, useCountWrapped));
     }
@@ -94,9 +104,9 @@ public interface JooqRepository {
      * @param useCountWrapped
      * @return
      */
-    default Page<? extends Record> page(SelectFromStep<? extends Record> select, Pageable pageable, boolean useCountWrapped) {
+    default Page<? extends Record> page(Supplier<SelectFromStep> select, Pageable pageable, boolean useCountWrapped) {
         pageable(select, pageable);
-        return page(select.fetch(), pageable, select, useCountWrapped);
+        return page(select.get().fetch(), pageable, select, useCountWrapped);
     }
 
     /**
@@ -106,10 +116,11 @@ public interface JooqRepository {
      * @param useCountWrapped use select count(*) from ( given select).
      * @return
      */
-    default Long fetchCount(SelectFromStep select, boolean useCountWrapped) {
+    default Long fetchCount(Supplier<SelectFromStep> select, boolean useCountWrapped) {
+        SelectFromStep step = select.get();
         if (useCountWrapped)
-            return Long.valueOf(dslContext().fetchCount(select));
-        String sql = select.getSQL().toLowerCase();
+            return Long.valueOf(dslContext().fetchCount(step));
+        String sql = step.getSQL().toLowerCase();
         String[] splitByFirstFrom = org.springframework.util.StringUtils.split(sql, "from");
         Assert.notNull(splitByFirstFrom, "invalid sql. can not split by 'from' fragment. ");
         sql = " from " + splitByFirstFrom[1];
@@ -118,7 +129,7 @@ public interface JooqRepository {
                 StringUtils.replace(splitByFirstFrom[0], "select", "select count(") + ")" :
                 "select count(*)";
         sql = countFragment + sql;
-        return Long.valueOf(dslContext().fetchOne(sql, select.getBindValues()).get(0).toString());
+        return Long.valueOf(dslContext().fetchOne(sql, step.getBindValues()).get(0).toString());
     }
 
 
@@ -168,12 +179,12 @@ public interface JooqRepository {
     }
 
 
-    default Condition conditionExists(Select select) {
-        return exists(select);
+    default Condition conditionExists(Supplier<Select> select) {
+        return exists(select.get());
     }
 
-    default Condition conditionNotExists(Select select) {
-        return notExists(select);
+    default Condition conditionNotExists(Supplier<Select> select) {
+        return notExists(select.get());
     }
 
     default Condition conditionNot(Condition condition) {
