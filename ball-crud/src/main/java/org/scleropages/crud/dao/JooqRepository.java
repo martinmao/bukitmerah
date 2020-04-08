@@ -64,13 +64,13 @@ public interface JooqRepository<R, T> {
      * @param pageable
      * @return
      */
-    default void pageable(Supplier<SelectFromStep> select, Pageable pageable) {
+    default void dslPageable(Supplier<SelectFromStep> select, Pageable pageable) {
         Assert.notNull(select, "select mut not be null.");
         Assert.notNull(pageable, "pageable must not be null.");
         if (null != pageable.getSort()) {
             List<OrderField> orderFields = Lists.newArrayList();
             pageable.getSort().forEach(order -> {
-                Field orderField = nameToField(order.getProperty());
+                Field orderField = dslNameToField(order.getProperty());
                 orderFields.add(order.getDirection().isAscending() ? orderField.asc() : orderField.desc());
             });
             select.get().orderBy(orderFields);
@@ -90,9 +90,9 @@ public interface JooqRepository<R, T> {
      * @param <T>
      * @return
      */
-    default <E> Page<E> page(List<E> content, Pageable pageable, Supplier<SelectFromStep> select, boolean useCountWrapped) {
+    default <E> Page<E> dslPage(List<E> content, Pageable pageable, Supplier<SelectFromStep> select, boolean useCountWrapped) {
         Assert.notNull(select, "select must not be null.");
-        return PageableExecutionUtils.getPage(content, pageable, () -> fetchCount(select, useCountWrapped));
+        return PageableExecutionUtils.getPage(content, pageable, () -> dslFetchCount(select, useCountWrapped));
     }
 
 
@@ -104,9 +104,9 @@ public interface JooqRepository<R, T> {
      * @param useCountWrapped
      * @return
      */
-    default Page<? extends Record> page(Supplier<SelectFromStep> select, Pageable pageable, boolean useCountWrapped) {
-        pageable(select, pageable);
-        return page(select.get().fetch(), pageable, select, useCountWrapped);
+    default Page<? extends Record> dslPage(Supplier<SelectFromStep> select, Pageable pageable, boolean useCountWrapped) {
+        dslPageable(select, pageable);
+        return dslPage(select.get().fetch(), pageable, select, useCountWrapped);
     }
 
     /**
@@ -116,7 +116,7 @@ public interface JooqRepository<R, T> {
      * @param useCountWrapped use select count(*) from ( given select).
      * @return
      */
-    default Long fetchCount(Supplier<SelectFromStep> select, boolean useCountWrapped) {
+    default Long dslFetchCount(Supplier<SelectFromStep> select, boolean useCountWrapped) {
         SelectFromStep step = select.get();
         if (useCountWrapped)
             return Long.valueOf(dslContext().fetchCount(step));
@@ -142,7 +142,7 @@ public interface JooqRepository<R, T> {
      * @param bindings
      * @return
      */
-    default Condition conditionSql(String sql, Object... bindings) {
+    default Condition dslConditionSql(String sql, Object... bindings) {
         return condition(sql, bindings);
     }
 
@@ -154,7 +154,7 @@ public interface JooqRepository<R, T> {
      * @param field
      * @return
      */
-    default Condition conditionField(Field<Boolean> field) {
+    default Condition dslConditionField(Field<Boolean> field) {
         return condition(field);
     }
 
@@ -164,7 +164,7 @@ public interface JooqRepository<R, T> {
      * @param conditions
      * @return
      */
-    default Condition conditionsAnd(Condition... conditions) {
+    default Condition dslConditionsAnd(Condition... conditions) {
         return and(conditions);
     }
 
@@ -174,20 +174,20 @@ public interface JooqRepository<R, T> {
      * @param conditions
      * @return
      */
-    default Condition conditionsOr(Condition... conditions) {
+    default Condition dslConditionsOr(Condition... conditions) {
         return or(conditions);
     }
 
 
-    default Condition conditionExists(Supplier<Select> select) {
+    default Condition dslConditionExists(Supplier<Select> select) {
         return exists(select.get());
     }
 
-    default Condition conditionNotExists(Supplier<Select> select) {
+    default Condition dslConditionNotExists(Supplier<Select> select) {
         return notExists(select.get());
     }
 
-    default Condition conditionNot(Condition condition) {
+    default Condition dslConditionNot(Condition condition) {
         return not(condition);
     }
 
@@ -214,7 +214,7 @@ public interface JooqRepository<R, T> {
      *
      * @return
      */
-    default Condition conditionNo() {
+    default Condition dslConditionNo() {
         return noCondition();
     }
 
@@ -223,7 +223,7 @@ public interface JooqRepository<R, T> {
      *
      * @return
      */
-    default Condition conditionTrue() {
+    default Condition dslConditionTrue() {
         return trueCondition();
     }
 
@@ -232,7 +232,7 @@ public interface JooqRepository<R, T> {
      *
      * @return
      */
-    default Condition conditionFalse() {
+    default Condition dslConditionFalse() {
         return falseCondition();
     }
 
@@ -242,7 +242,7 @@ public interface JooqRepository<R, T> {
      * @param qualifiedName
      * @return
      */
-    default Table nameToTable(String... qualifiedNames) {
+    default Table dslNameToTable(String... qualifiedNames) {
         return table(name(qualifiedNames));
     }
 
@@ -254,7 +254,7 @@ public interface JooqRepository<R, T> {
      * @param <T>
      * @return
      */
-    default <T> Field<T> nameToField(Class<T> type, String... qualifiedNames) {
+    default <T> Field<T> dslNameToField(Class<T> type, String... qualifiedNames) {
         return field(name(qualifiedNames), type);
     }
 
@@ -264,7 +264,7 @@ public interface JooqRepository<R, T> {
      * @param qualifiedNames
      * @return
      */
-    default Field nameToField(String... qualifiedNames) {
+    default Field dslNameToField(String... qualifiedNames) {
         return field(name(qualifiedNames));
     }
 
@@ -327,7 +327,7 @@ public interface JooqRepository<R, T> {
      * @param <T>
      * @return
      */
-    default <T> Param<T> inline(T value) {
+    default <T> Param<T> dslInline(T value) {
         return DSL.inline(value);
     }
 
@@ -337,7 +337,7 @@ public interface JooqRepository<R, T> {
      * @param keyWord
      * @return
      */
-    default Keyword keyWord(String keyWord) {
+    default Keyword dslKeyWord(String keyWord) {
         return DSL.keyword(keyWord);
     }
 }
