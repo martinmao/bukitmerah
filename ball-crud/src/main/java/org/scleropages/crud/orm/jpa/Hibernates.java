@@ -23,15 +23,13 @@ import org.hibernate.Hibernate;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.HibernateProxyHelper;
-import org.scleropages.crud.FrameworkContext;
 import org.springframework.core.ResolvableType;
-import org.springframework.orm.jpa.AbstractEntityManagerFactoryBean;
+import org.springframework.data.jpa.repository.JpaContext;
 import org.springframework.util.ClassUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,9 +38,6 @@ import java.util.Set;
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
 public abstract class Hibernates {
-
-
-    private static volatile List<String> HIBERNATE_ENTITIES_CLASSES = null;
 
     private static Map<Class, List<Field>> ENTITY_REFERENCED_FIELDS = Maps.newConcurrentMap();
 
@@ -76,18 +71,6 @@ public abstract class Hibernates {
         }
     }
 
-    public static List<String> mappedEntityClasses() {
-        if (null != HIBERNATE_ENTITIES_CLASSES)
-            return HIBERNATE_ENTITIES_CLASSES;
-        HIBERNATE_ENTITIES_CLASSES = Collections.unmodifiableList(FrameworkContext.getBean(AbstractEntityManagerFactoryBean.class).getPersistenceUnitInfo().getManagedClassNames());
-        return HIBERNATE_ENTITIES_CLASSES;
-    }
-
-
-    public static Map<String, Object> jpaProperties() {
-        return FrameworkContext.getBean(AbstractEntityManagerFactoryBean.class).getJpaPropertyMap();
-    }
-
 
     /**
      * <pre>
@@ -109,7 +92,7 @@ public abstract class Hibernates {
         if (entity == null)
             return null;
         Class entityType = HibernateProxyHelper.getClassWithoutInitializingProxy(entity);
-        if (!isEntityType(entityType))//不是entity type 直接返回
+        if (!JpaContexts.isEntityType(entityType))//不是entity type 直接返回
             return entity;
         List<Field> mappedFields = getMappedFields(entityType);
         if (mappedFields.size() == 0)//没有找到关系引用字段，直接返回
@@ -175,11 +158,6 @@ public abstract class Hibernates {
         return entity;
     }
 
-    public static boolean isEntityType(Class entityType) {
-        if (null == entityType)
-            return false;
-        return mappedEntityClasses().contains(entityType.getName());
-    }
 
 
     /**
@@ -194,11 +172,11 @@ public abstract class Hibernates {
             List<Field> refs = Lists.newArrayList();
             for (int i = 0; i < declaredFields.length; i++) {
                 Field field = declaredFields[i];
-                if (isEntityType(field.getType())) {
+                if (JpaContexts.isEntityType(field.getType())) {
                     refs.add(field);
-                } else if (ClassUtils.isAssignable(Collection.class, field.getType()) && isEntityType(ResolvableType.forField(field).getGeneric(0).resolve())) {
+                } else if (ClassUtils.isAssignable(Collection.class, field.getType()) && JpaContexts.isEntityType(ResolvableType.forField(field).getGeneric(0).resolve())) {
                     refs.add(field);
-                } else if (ClassUtils.isAssignable(Map.class, field.getType()) && isEntityType(ResolvableType.forField(field).getGeneric(1).resolve())) {
+                } else if (ClassUtils.isAssignable(Map.class, field.getType()) && JpaContexts.isEntityType(ResolvableType.forField(field).getGeneric(1).resolve())) {
                     refs.add(field);
                 }
             }

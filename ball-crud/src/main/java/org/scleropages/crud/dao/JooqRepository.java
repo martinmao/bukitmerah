@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.scleropages.crud.FrameworkContext;
+import org.scleropages.crud.orm.jpa.JpaContexts;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.NoRepositoryBean;
@@ -38,13 +39,25 @@ import static org.jooq.impl.DSL.*;
  * many of method arguments is a subclasses of Reactive({@link org.reactivestreams.Publisher}) implementations(eg:{@link Select} subclasses). but that is not compatibility with spring data-jpa.
  * it will throw "org.springframework.dao.InvalidDataAccessApiUsageException: Reactive Repositories are not supported by JPA."
  * so wrapped these arguments as a {@link Supplier}.
- * The declaration of generic type of 0 is Jooq {@link Table} implementation. and 1 is entity type (annotated with {@link javax.persistence.Entity}) .
+ * The declaration of generic type of:
+ * 'T' is Jooq {@link Table} implementation.
+ * 'R' is Jooq {@link Record} implementation.
+ * 'E' is JPA entity type (annotated with {@link javax.persistence.Entity}) .
  * </pre>
  *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
 @NoRepositoryBean
-public interface JooqRepository<R, T> {
+public interface JooqRepository<T extends Table, R extends Record, E> {
+
+
+    default void dslMapEntity(R sourceRecord, E targetEntity) {
+        Assert.isTrue(JpaContexts.isEntity(targetEntity), "not a entity instance: " + targetEntity);
+        JpaContexts.EntityMetaModel<?> entityMetaModel = JpaContexts.getEntityMetaModel(targetEntity.getClass());
+        entityMetaModel.singularBasicAttributes().forEach(singularAttribute -> {
+            singularAttribute.getJavaMember();
+        });
+    }
 
 
     /**
