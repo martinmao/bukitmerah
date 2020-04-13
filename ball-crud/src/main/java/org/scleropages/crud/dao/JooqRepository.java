@@ -16,9 +16,11 @@
 package org.scleropages.crud.dao;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.jooq.*;
 import org.jooq.impl.DSL;
+import org.scleropages.core.util.GenericTypes;
 import org.scleropages.crud.FrameworkContext;
 import org.scleropages.crud.orm.jpa.JpaContexts;
 import org.springframework.data.domain.Page;
@@ -28,6 +30,7 @@ import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.util.Assert;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import static org.jooq.impl.DSL.*;
@@ -249,6 +252,35 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
         return falseCondition();
     }
 
+
+    /**
+     * get associated {@link Table} for current repository.
+     *
+     * @return
+     */
+    default T dslTable() {
+        return (T) JooqGeneratedObjectRepository.getRequiredTable(getClass());
+    }
+
+    /**
+     * get {@link Field} from current associated {@link Table}
+     *
+     * @param name
+     * @return
+     */
+    default Field<T> dslField(String name) {
+        return dslTable().field(name);
+    }
+
+    /**
+     * create new record from current associated {@link Table}
+     *
+     * @return
+     */
+    default R dslNewRecord() {
+        return (R) dslContext().newRecord(dslTable());
+    }
+
     /**
      * create table by given qualifiedNames
      *
@@ -352,5 +384,35 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      */
     default Keyword dslKeyWord(String keyWord) {
         return DSL.keyword(keyWord);
+    }
+
+
+    /**
+     * utility class used for lookup a jooq generated objects(table,field,key...)
+     */
+    abstract class JooqGeneratedObjectRepository {
+
+
+        /*cache jooq tables by JooqRepository class*/
+        private static final Map<Class, Table> cachedTables = Maps.newConcurrentMap();
+
+        /**
+         * get {@link Table} implementation(code generated) by given repository class.
+         *
+         * @param jooqRepositoryImpl
+         * @return
+         */
+        public static Table getRequiredTable(Class jooqRepositoryImpl) {
+            return cachedTables.computeIfAbsent(jooqRepositoryImpl, key -> {
+                Class tableClass = GenericTypes.getClassGenericType(key, JooqRepository.class, 0);
+                Assert.notNull(tableClass, "no jooq repository generic-type found: " + key);
+                Assert.isAssignable(Table.class, tableClass, key + " not a org.jooq.Table implementation.");
+                try {
+                    return (Table) tableClass.newInstance();
+                } catch (InstantiationException | IllegalAccessException e) {
+                    throw new IllegalStateException(e);
+                }
+            });
+        }
     }
 }
