@@ -314,7 +314,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
     }
 
     /**
-     * get field by given field name
+     * get field by given {@link Table} and field name
      *
      * @param qualifiedNames
      * @return
@@ -324,7 +324,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
     }
 
     /**
-     * get field by given field name
+     * get field by given {@link Table} and field name (type-safety.)
      *
      * @param qualifiedNames
      * @return
