@@ -292,7 +292,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
     }
 
     /**
-     * create field by given qualifiedNames(type-safety.)
+     * get field by given qualifiedNames(type-safety.)
      *
      * @param type
      * @param qualifiedNames
@@ -304,13 +304,33 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
     }
 
     /**
-     * create field by given qualifiedNames
+     * get field by given qualifiedNames
      *
      * @param qualifiedNames
      * @return
      */
     default Field dslNameToField(String... qualifiedNames) {
         return field(name(qualifiedNames));
+    }
+
+    /**
+     * get field by given field name
+     *
+     * @param qualifiedNames
+     * @return
+     */
+    default Field dslNameToField(Table table, String fieldName) {
+        return dslNameToField(table.getName(), fieldName);
+    }
+
+    /**
+     * get field by given field name
+     *
+     * @param qualifiedNames
+     * @return
+     */
+    default Field<T> dslNameToField(Table table, String fieldName, Class<T> fieldType) {
+        return dslNameToField(fieldType, table.getName(), fieldName);
     }
 
     /**
