@@ -80,19 +80,22 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @param pageable
      * @return
      */
-    default void dslPageable(Supplier<SelectFromStep> select, Pageable pageable) {
+    default void dslPageable(Supplier<SelectQuery> select, Pageable pageable) {
         Assert.notNull(select, "select mut not be null.");
         Assert.notNull(pageable, "pageable must not be null.");
+        SelectQuery query = select.get();
         if (null != pageable.getSort()) {
             List<OrderField> orderFields = Lists.newArrayList();
             pageable.getSort().forEach(order -> {
                 Field orderField = dslNameToField(order.getProperty());
                 orderFields.add(order.getDirection().isAscending() ? orderField.asc() : orderField.desc());
             });
-            select.get().orderBy(orderFields);
+            query.addOrderBy((orderFields));
         }
-        if (pageable.isPaged())
-            select.get().offset(pageable.getOffset()).limit(pageable.getPageSize());
+        if (pageable.isPaged()) {
+            query.addOffset(pageable.getOffset());
+            query.addLimit(pageable.getPageSize());
+        }
     }
 
 
@@ -106,7 +109,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @param <T>
      * @return
      */
-    default <E> Page<E> dslPage(List<E> content, Pageable pageable, Supplier<SelectFromStep> select, boolean useCountWrapped) {
+    default <E> Page<E> dslPage(List<E> content, Pageable pageable, Supplier<SelectQuery> select, boolean useCountWrapped) {
         Assert.notNull(select, "select must not be null.");
         return PageableExecutionUtils.getPage(content, pageable, () -> dslFetchCount(select, useCountWrapped));
     }
@@ -120,7 +123,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @param useCountWrapped
      * @return
      */
-    default Page<? extends Record> dslPage(Supplier<SelectFromStep> select, Pageable pageable, boolean useCountWrapped) {
+    default Page<? extends Record> dslPage(Supplier<SelectQuery> select, Pageable pageable, boolean useCountWrapped) {
         dslPageable(select, pageable);
         return dslPage(select.get().fetch(), pageable, select, useCountWrapped);
     }
@@ -129,14 +132,14 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * query number of count results by given select.
      *
      * @param select
-     * @param useCountWrapped use select count(*) from ( given select).
+     * @param useCountWrapped use select count(*) from (given select).
      * @return
      */
-    default Long dslFetchCount(Supplier<SelectFromStep> select, boolean useCountWrapped) {
-        SelectFromStep step = select.get();
+    default Long dslFetchCount(Supplier<SelectQuery> select, boolean useCountWrapped) {
+        SelectQuery query = select.get();
         if (useCountWrapped)
-            return Long.valueOf(dslContext().fetchCount(step));
-        String sql = step.getSQL().toLowerCase();
+            return Long.valueOf(dslContext().select(DSL.count()).from(query.asTable()).fetchOne().value1());
+        String sql = query.getSQL().toLowerCase();
         String[] splitByFirstFrom = org.springframework.util.StringUtils.split(sql, "from");
         Assert.notNull(splitByFirstFrom, "invalid sql. can not split by 'from' fragment. ");
         sql = " from " + splitByFirstFrom[1];
@@ -145,7 +148,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
                 StringUtils.replace(splitByFirstFrom[0], "select", "select count(") + ")" :
                 "select count(*)";
         sql = countFragment + sql;
-        return Long.valueOf(dslContext().fetchOne(sql, step.getBindValues()).get(0).toString());
+        return Long.valueOf(dslContext().fetchOne(sql, query.getBindValues()).get(0).toString());
     }
 
 
