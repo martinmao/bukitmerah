@@ -26,5 +26,27 @@ xxxManager：模块通用业务逻辑实现直接放置模块根目录下(是否
 xxxEntity：任何entity命名必须以Entity结尾
 Model名称不必添加任何前后缀
 任何基于属性注解（jpa,validation，序列化..）都必须定义在getter方法防止跨方法直接访问字段
+
+Repository&Entities说明
+* Entity中所有Primitive属性必须都定义为Wrapping类型，避免因为java初始化默认值带来的二义性(0 or null,false or null)
+* 关联查询尽可能小表驱动大表，尤其在大数据量情况下
+```
+class DepartmentEntity{
+    @OneToMany
+    List<UserEntity> users;
+    ...
+}
+class UserEntity{
+    @ManyToOne
+    DepartmentEntity dept;
+}
+
+interface UserRepository<UserEntity> ...{
+    //查询给定部门下所有用户，不建议的姿势
+    Page<UserEntity> findByDept_Id(Long deptId);
+}
+
+```
+
     
 

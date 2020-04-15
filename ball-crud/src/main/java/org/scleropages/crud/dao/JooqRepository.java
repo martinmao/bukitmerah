@@ -21,24 +21,37 @@ import org.apache.commons.lang3.StringUtils;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.scleropages.core.util.GenericTypes;
+import org.scleropages.core.util.Reflections2;
 import org.scleropages.crud.FrameworkContext;
+import org.scleropages.crud.orm.SearchFilter;
 import org.scleropages.crud.orm.jpa.JpaContexts;
+import org.scleropages.crud.orm.jpa.JpaContexts.ManagedTypeModel;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.util.Assert;
 
+import javax.persistence.Column;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.Attribute.PersistentAttributeType;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.SingularAttribute;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Member;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static org.jooq.impl.DSL.*;
 
 /**
  * Support for jOOQ.
  * <pre>
- * This interface can complement for {@link org.scleropages.crud.orm.jpa.GenericRepository}.
+ * This interface can complement for {@link org.scleropages.crud.orm.jpa.GenericRepository}. all method defined start with 'dsl'.
  * many of method arguments is a subclasses of Reactive({@link org.reactivestreams.Publisher}) implementations(eg:{@link Select} subclasses). but that is not compatibility with spring data-jpa.
  * it will throw "org.springframework.dao.InvalidDataAccessApiUsageException: Reactive Repositories are not supported by JPA."
  * so wrapped these arguments as a {@link Supplier}.
@@ -54,12 +67,92 @@ import static org.jooq.impl.DSL.*;
 public interface JooqRepository<T extends Table, R extends Record, E> {
 
 
-    default void dslMapEntity(R sourceRecord, E targetEntity) {
+    /**
+     * map a jooq record to given entity.
+     *
+     * <pre>
+     *     支持的关系：
+     *     BASIC属性直接设置到目标实体
+     *     EMBEDDED属性会创建目标实体的关联实体对象并设置到目标属性
+     *     MANY_TO_ONE属性的目标实体必须为关系维护方，会创建关联实体对象并设置到目标属性（已经存在则直接设置）
+     *     ONE_TO_ONE属性的目标实体必须为关系维护方，会创建关联实体对象并设置到目标属性（已经存在则直接设置）
+     *     部分支持的规则：
+     *     ONE_TO_MANY 无法将结果集中的记录进行合并绑定到一的一方，只能将目标实体（多的一方）进行MANY_TO_ONE设置.即目标实体必须为多的一方（且作为关系维护方
+     *     不支持的关系：
+     *     MANY_TO_MANY
+     *     ELEMENT_COLLECTION
+     * </pre>
+     *
+     * @param sourceRecord
+     * @param targetEntity
+     */
+    default void dslRecordInto(R sourceRecord, E targetEntity) {
+
+        Assert.notNull(sourceRecord, "sourceRecord must not be null.");
+        Assert.notNull(targetEntity, "targetEntity must not be null.");
+        //sourceRecord.into(targetEntity); Only the javax.persistence.Column annotation is used and understood for jOOQ.
+
+        Class<?> targetEntityClass = targetEntity.getClass();
         Assert.isTrue(JpaContexts.isEntity(targetEntity), "not a entity instance: " + targetEntity);
-        JpaContexts.EntityMetaModel<?> entityMetaModel = JpaContexts.getEntityMetaModel(targetEntity.getClass());
-        entityMetaModel.singularBasicAttributes().forEach(singularAttribute -> {
-            singularAttribute.getJavaMember();
+        ManagedTypeModel<?> targetEntityModel = JpaContexts.getManagedTypeModel(targetEntityClass);
+        Map<String, EntityType> tableEntityTypes = JpaContexts.databaseTableEntityTypes();
+
+        Stream.of(sourceRecord.fields()).forEach(field -> {
+            Object fieldValue = field.getValue(sourceRecord);
+            if (null == fieldValue)//null value always not mapped.
+                return;
+            String[] qualifiedName = field.getQualifiedName().getName();
+            if (qualifiedName.length < 2)
+                throw new IllegalArgumentException("field qualified name not contains table name: " + field.getQualifiedName());
+            String tableName = qualifiedName[0];
+            String fieldName = qualifiedName[1];
+            //先从目标实体中查看column对应的属性，其中 BASIC，EMBEDDED属性直接设置
+            Attribute<?, Object> fieldAttribute = targetEntityModel.attributeByDatabaseColumn(fieldName);
+            if (null != fieldAttribute) {
+                PersistentAttributeType persistentAttributeType = fieldAttribute.getPersistentAttributeType();
+                if (Objects.equals(persistentAttributeType, PersistentAttributeType.BASIC)) {
+                    Reflections2.invokeSet(targetEntity, fieldAttribute.getName(), dslGetEntityBasicAttributeValue(field, fieldValue));
+                } else if (Objects.equals(persistentAttributeType, PersistentAttributeType.EMBEDDED)) {
+                    dslMapAssociatedAttribute(targetEntity, field, fieldName, fieldValue, fieldAttribute);
+                }
+            } else {//如果column name对应的属性在目标实体中无法找到，则说明该column来源于其关联实体，从table进行实体发现并关联
+                Attribute<?, Object> associatedAttribute = targetEntityModel.attributeByDatabaseTable(tableName);
+                Assert.notNull(associatedAttribute, "can not found attribute associated table: " + tableName + " from: " + targetEntityClass);
+                Assert.isTrue(!associatedAttribute.isCollection(), "not support collection attribute from: " + associatedAttribute.getName() + " with field: " + field);
+                dslMapAssociatedAttribute(targetEntity, field, fieldName, fieldValue, associatedAttribute);
+            }
         });
+    }
+
+    /**
+     * overrides this method how to convert a record field value as entity basic property. by default nothing to do return directly.
+     *
+     * @param value
+     * @return
+     */
+    default Object dslGetEntityBasicAttributeValue(Field field, Object jooqFieldValue) {
+        return jooqFieldValue;
+    }
+
+
+    /**
+     * overrides this method how to map a record value to entity associated property.
+     * 默认根据field类型关联的java type 从jpa 上下文中查找对应 entity metadata 并进行匹配设置属性.
+     * 适用于多对一，一对一，EMBEDDED 类型映射
+     *
+     * @param targetEntity
+     * @param field
+     * @param fieldName
+     * @param fieldValue
+     * @param fieldAttribute
+     */
+    default void dslMapAssociatedAttribute(E targetEntity, Field field, String fieldName, Object fieldValue, Attribute<?, Object> fieldAttribute) {
+        if (null == fieldValue)
+            return;
+        ManagedTypeModel<Object> associatedTypeMode = JpaContexts.getManagedTypeModel(fieldAttribute.getJavaType());
+        Attribute<Object, Object> associatedFieldAttribute = associatedTypeMode.attributeByDatabaseColumn(fieldName);
+        if (null != associatedFieldAttribute)
+            Reflections2.invokeSet(targetEntity, fieldAttribute.getName() + "." + associatedFieldAttribute.getName(), dslGetEntityBasicAttributeValue(field, fieldValue));
     }
 
 
@@ -127,6 +220,27 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
         dslPageable(select, pageable);
         return dslPage(select.get().fetch(), pageable, select, useCountWrapped);
     }
+
+
+    default Page<? extends Record> dslPage(Supplier<SelectQuery> select, Pageable pageable, Map<String, SearchFilter> searchFilter, boolean useCountWrapped) {
+        Assert.notEmpty(searchFilter, "searchFilter must not be empty.");
+        Class entityClass = GenericTypes.getClassGenericType(getClass(), JooqRepository.class, 2);
+        Assert.notNull(entityClass, "generic type(E for entityClass) not declared: " + getClass());
+        ManagedTypeModel<?> entityMetaModel = JpaContexts.getManagedTypeModel(entityClass);
+        Condition condition = dslConditionTrue();
+
+        searchFilter.forEach((property, filter) -> {
+            Assert.isTrue(entityMetaModel.isSingularAttribute(property), "not a singular persist(basic,many-to-one,one-to-one) property: " + property + " from: " + entityClass);
+            SingularAttribute<?, Object> attribute = entityMetaModel.singularAttribute(property);
+            Member javaMember = attribute.getJavaMember();
+            Assert.isAssignable(AnnotatedElement.class, javaMember.getClass(), "property's member not an AnnotatedElement: " + property + " from: " + entityClass);
+            AnnotationUtils.findAnnotation((AnnotatedElement) javaMember, Column.class);
+        });
+        SelectQuery query = select.get();
+        query.addConditions(condition);
+        return dslPage(select, pageable, useCountWrapped);
+    }
+
 
     /**
      * query number of count results by given select.
@@ -425,7 +539,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
          * @param jooqRepositoryImpl
          * @return
          */
-        public static Table getRequiredTable(Class jooqRepositoryImpl) {
+        private static Table getRequiredTable(Class jooqRepositoryImpl) {
             return cachedTables.computeIfAbsent(jooqRepositoryImpl, key -> {
                 Class tableClass = GenericTypes.getClassGenericType(key, JooqRepository.class, 0);
                 Assert.notNull(tableClass, "no jooq repository generic-type found: " + key);
