@@ -14,30 +14,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.scleropages.crud.orm.jpa.entity.embeddable;
+package org.scleropages.crud.dao.orm.jpa;
+
+import javax.persistence.criteria.JoinType;
 
 /**
- * @author <a href="mailto:dev.martinmao@gmail.com">Martin Mao</a>
+ * 
  *
+ * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
-public enum Gender {
+public class FieldFetch {
 
-	FEMALE("Female", "女"), MALE("Male", "男"), UNKOWN("Unkown", "未知");
+	private String field;
 
-	private String tag;
-	private String localTag;
-	
+	private JoinType joinType;
 
-	private Gender(String tag, String localTag) {
-		this.tag = tag;
-		this.localTag = localTag;
+	public FieldFetch(String field) {
+		this(field, JoinType.LEFT);
 	}
 
-	public String tag() {
-		return tag;
+	public FieldFetch(String field, JoinType joinType) {
+		this.field = field;
+		this.joinType = joinType;
 	}
 
-	public String localTag() {
-		return localTag;
+	public String getField() {
+		return field;
+	}
+
+	public JoinType getJoinType() {
+		return joinType;
 	}
 }

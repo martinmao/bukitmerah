@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.scleropages.crud.orm;
+package org.scleropages.crud.dao.orm;
 
 
 import org.scleropages.crud.web.Servlets;

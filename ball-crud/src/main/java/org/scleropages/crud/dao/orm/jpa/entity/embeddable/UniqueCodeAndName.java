@@ -27,7 +27,7 @@
  * 
  ********************************************************************************/
 
-package org.scleropages.crud.orm.jpa.entity.embeddable;
+package org.scleropages.crud.dao.orm.jpa.entity.embeddable;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;

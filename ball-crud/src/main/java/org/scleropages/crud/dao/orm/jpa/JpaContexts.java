@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.scleropages.crud.orm.jpa;
+package org.scleropages.crud.dao.orm.jpa;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -332,6 +332,15 @@ public class JpaContexts {
          */
         public boolean isEntityType() {
             return managedType instanceof EntityType;
+        }
+
+        /**
+         * return true if current {@link ManagedType} can assigned to {@link EmbeddableType}
+         *
+         * @return
+         */
+        public boolean isEmbeddableType() {
+            return managedType instanceof EmbeddableType;
         }
 
         /**

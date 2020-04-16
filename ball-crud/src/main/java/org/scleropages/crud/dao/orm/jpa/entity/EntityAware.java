@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.scleropages.crud.orm.jpa.entity;
+package org.scleropages.crud.dao.orm.jpa.entity;
 
 /**
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>

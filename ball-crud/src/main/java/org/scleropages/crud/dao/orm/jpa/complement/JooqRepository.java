@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.scleropages.crud.dao;
+package org.scleropages.crud.dao.orm.jpa.complement;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -23,23 +23,18 @@ import org.jooq.impl.DSL;
 import org.scleropages.core.util.GenericTypes;
 import org.scleropages.core.util.Reflections2;
 import org.scleropages.crud.FrameworkContext;
-import org.scleropages.crud.orm.SearchFilter;
-import org.scleropages.crud.orm.jpa.JpaContexts;
-import org.scleropages.crud.orm.jpa.JpaContexts.ManagedTypeModel;
-import org.springframework.core.annotation.AnnotationUtils;
+import org.scleropages.crud.dao.orm.SearchFilter;
+import org.scleropages.crud.dao.orm.jpa.JpaContexts;
+import org.scleropages.crud.dao.orm.jpa.JpaContexts.ManagedTypeModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.util.Assert;
 
-import javax.persistence.Column;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.SingularAttribute;
-import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Member;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -51,7 +46,7 @@ import static org.jooq.impl.DSL.*;
 /**
  * Support for jOOQ.
  * <pre>
- * This interface can complement for {@link org.scleropages.crud.orm.jpa.GenericRepository}. all method defined start with 'dsl'.
+ * This interface can complement for {@link org.scleropages.crud.dao.orm.jpa.GenericRepository}. all method defined start with 'dsl'.
  * many of method arguments is a subclasses of Reactive({@link org.reactivestreams.Publisher}) implementations(eg:{@link Select} subclasses). but that is not compatibility with spring data-jpa.
  * it will throw "org.springframework.dao.InvalidDataAccessApiUsageException: Reactive Repositories are not supported by JPA."
  * so wrapped these arguments as a {@link Supplier}.
@@ -175,6 +170,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      */
     default void dslPageable(Supplier<SelectQuery> select, Pageable pageable) {
         Assert.notNull(select, "select mut not be null.");
+        Assert.notNull(select.get(), "select not supply.");
         Assert.notNull(pageable, "pageable must not be null.");
         SelectQuery query = select.get();
         if (null != pageable.getSort()) {
@@ -203,13 +199,12 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @return
      */
     default <E> Page<E> dslPage(List<E> content, Pageable pageable, Supplier<SelectQuery> select, boolean useCountWrapped) {
-        Assert.notNull(select, "select must not be null.");
         return PageableExecutionUtils.getPage(content, pageable, () -> dslFetchCount(select, useCountWrapped));
     }
 
 
     /**
-     * Create spring data {@link Page} by given select
+     * Create spring data {@link Page} from query result by given select.
      *
      * @param select
      * @param pageable
@@ -222,22 +217,21 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
     }
 
 
+    /**
+     * create spring data {@link Page} from query result by given select and group of {@link SearchFilter}s.
+     *
+     * @param select
+     * @param pageable
+     * @param searchFilter
+     * @param useCountWrapped
+     * @return
+     */
     default Page<? extends Record> dslPage(Supplier<SelectQuery> select, Pageable pageable, Map<String, SearchFilter> searchFilter, boolean useCountWrapped) {
-        Assert.notEmpty(searchFilter, "searchFilter must not be empty.");
-        Class entityClass = GenericTypes.getClassGenericType(getClass(), JooqRepository.class, 2);
-        Assert.notNull(entityClass, "generic type(E for entityClass) not declared: " + getClass());
-        ManagedTypeModel<?> entityMetaModel = JpaContexts.getManagedTypeModel(entityClass);
-        Condition condition = dslConditionTrue();
-
-        searchFilter.forEach((property, filter) -> {
-            Assert.isTrue(entityMetaModel.isSingularAttribute(property), "not a singular persist(basic,many-to-one,one-to-one) property: " + property + " from: " + entityClass);
-            SingularAttribute<?, Object> attribute = entityMetaModel.singularAttribute(property);
-            Member javaMember = attribute.getJavaMember();
-            Assert.isAssignable(AnnotatedElement.class, javaMember.getClass(), "property's member not an AnnotatedElement: " + property + " from: " + entityClass);
-            AnnotationUtils.findAnnotation((AnnotatedElement) javaMember, Column.class);
-        });
-        SelectQuery query = select.get();
-        query.addConditions(condition);
+        Assert.notNull(select, "select must not be null.");
+        Assert.notNull(select.get(), "select not supply.");
+        Assert.notNull(searchFilter, "searchFilter must not be null.");
+        Condition condition = DynamicJpaSupportJooqConditions.bySearchFilter(select.get(), JpaContexts.getManagedTypeModel(GenericTypes.getClassGenericType(getClass(), JooqRepository.class, 2)), searchFilter.values());
+        select.get().addConditions(condition);
         return dslPage(select, pageable, useCountWrapped);
     }
 

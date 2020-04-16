@@ -15,9 +15,9 @@
  */
 package org.scleropages.crud.web;
 
-import org.scleropages.crud.orm.PageableBuilder;
-import org.scleropages.crud.orm.SearchFilter;
-import org.scleropages.crud.orm.SortBuilder;
+import org.scleropages.crud.dao.orm.PageableBuilder;
+import org.scleropages.crud.dao.orm.SearchFilter;
+import org.scleropages.crud.dao.orm.SortBuilder;
 import org.springframework.data.domain.Pageable;
 
 import javax.servlet.http.HttpServletRequest;

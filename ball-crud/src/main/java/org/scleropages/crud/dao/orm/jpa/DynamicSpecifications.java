@@ -3,13 +3,13 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *******************************************************************************/
-package org.scleropages.crud.orm.jpa;
+package org.scleropages.crud.dao.orm.jpa;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.scleropages.core.util.Collections3;
-import org.scleropages.crud.orm.SearchFilter;
+import org.scleropages.crud.dao.orm.SearchFilter;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.CriteriaBuilder;

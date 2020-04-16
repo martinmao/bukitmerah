@@ -3,7 +3,7 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *******************************************************************************/
-package org.scleropages.crud.orm;
+package org.scleropages.crud.dao.orm;
 
 import com.google.common.collect.Maps;
 import org.apache.commons.lang3.ArrayUtils;
@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class SearchFilter {
-
     public enum Operator {
         EQ, NEQ, LIKE, GT, LT, GTE, LTE, NULL, NOTNULL, IN, NLIKE
     }

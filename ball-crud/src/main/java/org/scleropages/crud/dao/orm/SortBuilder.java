@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.scleropages.crud.orm;
+package org.scleropages.crud.dao.orm;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;

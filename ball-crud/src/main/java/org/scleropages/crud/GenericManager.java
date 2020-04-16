@@ -16,8 +16,8 @@
 package org.scleropages.crud;
 
 import org.scleropages.crud.exception.BizViolationException;
-import org.scleropages.crud.orm.ModelMapper;
-import org.scleropages.crud.orm.ModelMapperRepository;
+import org.scleropages.crud.dao.orm.ModelMapper;
+import org.scleropages.crud.dao.orm.ModelMapperRepository;
 import org.scleropages.crud.types.Available;
 
 import javax.validation.Valid;

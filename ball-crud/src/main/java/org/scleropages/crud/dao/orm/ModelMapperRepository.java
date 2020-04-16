@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.scleropages.crud.orm;
+package org.scleropages.crud.dao.orm;
 
 import com.google.common.collect.Maps;
 import org.mapstruct.factory.Mappers;
 import org.scleropages.core.util.GenericTypes;
 import org.scleropages.crud.FrameworkContext;
 import org.scleropages.crud.GenericManager;
-import org.scleropages.crud.orm.jpa.GenericRepository;
+import org.scleropages.crud.dao.orm.jpa.GenericRepository;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 

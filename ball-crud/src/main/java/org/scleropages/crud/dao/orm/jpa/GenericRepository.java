@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.scleropages.crud.orm.jpa;
+package org.scleropages.crud.dao.orm.jpa;
 
 import org.scleropages.core.util.GenericTypes;
-import org.scleropages.crud.orm.ModelMapper;
-import org.scleropages.crud.orm.ModelMapperRepository;
-import org.scleropages.crud.orm.SearchFilter;
+import org.scleropages.crud.dao.orm.ModelMapper;
+import org.scleropages.crud.dao.orm.ModelMapperRepository;
+import org.scleropages.crud.dao.orm.SearchFilter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
