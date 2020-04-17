@@ -64,7 +64,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
 
     /**
      * map a jooq record to given entity.
-     *
+     * jOOQ默认record into entity,仅支持声明了@Column的属性.即basic field。
      * <pre>
      *     支持的关系：
      *     BASIC属性直接设置到目标实体

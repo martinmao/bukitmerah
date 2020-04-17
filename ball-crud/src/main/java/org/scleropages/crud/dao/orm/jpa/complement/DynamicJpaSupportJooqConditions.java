@@ -45,7 +45,7 @@ import static org.jooq.impl.DSL.*;
  * Similar with {@link org.scleropages.crud.dao.orm.jpa.DynamicSpecifications} used to convert a group of SearchFilters applying to {@link SelectQuery}.
  * <pre>
  *     This class must complement with JPA environments. query builder base jpa annotations. it's translate jpa entity relations to condition.
- *     The {@link SearchFilter} support basic, association,embedded property. but not support collection property.
+ *     The {@link SearchFilter} support basic, single value association,embedded property. but not support collection property.
  *          NOTE: You must ensure the accessibility of one-way associations. where the property navigation is always from the relationship maintainer to the target entity.
  *     This class will auto applying join relationship when association property . So Please don't add join to SelectQuery.
  *
@@ -117,7 +117,12 @@ public abstract class DynamicJpaSupportJooqConditions {
         Attribute<?, Object> currentAttribute = previousManagedTypeModel.attribute(currentNestedProperty);
         if (index < pathNames.length - 1) {//when iterators to last nested property is's a basic property.don't need to join.
             Assert.isTrue(currentAttribute.isAssociation(), () -> "not an association attribute: " + currentNestedProperty + " from:" + previousManagedJavaType);
-            Assert.isTrue(!currentAttribute.isCollection(), () -> "not support collection attribute: " + currentNestedProperty + " from: " + previousManagedJavaType);
+
+            //Assert.isTrue(!currentAttribute.isCollection(), () -> "not support collection attribute: " + currentNestedProperty + " from: " + previousManagedJavaType);
+            if (currentAttribute.isCollection()) {
+                processCollectionAttributeJoin(query, pathNames, previousManagedTypeModel, previousNestedProperty, currentManagedTypeModel, currentNestedProperty, currentAttribute, index);
+            }
+
             JoinColumn joinColumn = previousManagedTypeModel.attributeAnnotation(currentAttribute, JoinColumn.class);
             Assert.notNull(joinColumn, () -> "can not found @JoinColumn from: " + previousManagedJavaType + "." + currentNestedProperty);
 
@@ -156,6 +161,23 @@ public abstract class DynamicJpaSupportJooqConditions {
         } else
             throw new IllegalArgumentException("unknown managed type model: " + previousManagedJavaType);
         processBasicProperty(field, filter, conditions);
+    }
+
+    private static void processCollectionAttributeJoin(SelectQuery query, String[] pathNames, ManagedTypeModel<?> previousManagedTypeModel, String previousNestedProperty, ManagedTypeModel<?> currentManagedTypeModel, String currentNestedProperty, Attribute<?, Object> currentAttribute, int index) {
+        Assert.isTrue(false, () -> "not support collection attribute: " + currentNestedProperty + " from: " + previousManagedTypeModel.managedType().getJavaType());
+        //several possibles:
+        //
+        //@OneToMany(mappedBy = "target")反向关联，需根据类型以及属性名称找到对应的关系维护方属性上确认@ManyToOne以及@JoinColumn
+        //
+        //@OneToMany 单向一对多关联，但需要join3张表
+        //@JoinTable(name = "source_target", joinColumns = { @JoinColumn(name = "source_id") }, inverseJoinColumns = { @JoinColumn(name = "target_id") })
+        //-------------------------------------------------------------------------------------------------------------------------------------------------
+        //@ManyToMany(mappedBy = "target")反向关联，需根据类型以及属性名称找到对应的关系维护方属性上确认@ManyToMany以及@JoinColumn，并join3张表
+        //@ManyToMany 单（双）向关联
+        //@JoinTable(name = "source_target", joinColumns = { @JoinColumn(name = "source_id") }, inverseJoinColumns = { @JoinColumn(name = "target_id") })
+
+        //实际业务场景不多且会产生重复记录（需要二次处理）3张join较影响性能.. may supports in feature........暂定.....
+
     }
 
 
