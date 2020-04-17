@@ -2,7 +2,7 @@
 ##
 ## 业务模块层次结构
 ```
-<business_package>
+<business_model_package>
 ├── ApplicationManager.java: 业务实现
 ├── entity: jpa entity and repository
 │   ├── ApplicationEntity.java
