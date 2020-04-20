@@ -64,7 +64,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
 
     /**
      * map a jooq record to given entity.
-     * jOOQ默认record into entity,仅支持声明了@Column的属性.即basic field。
+     * jOOQ默认record into entity,仅支持声明了@Column的属性.即basic field。当前自行实现map策略
      * <pre>
      *     支持的关系：
      *     BASIC属性直接设置到目标实体
@@ -77,6 +77,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      *     MANY_TO_MANY
      *     ELEMENT_COLLECTION
      * </pre>
+     * NOTE: map过程不进行类型转换而直接设置到目标属性，如遇到类型问题自行覆写{@link #dslGetEntityBasicAttributeValue(Field, Object)}
      *
      * @param sourceRecord
      * @param targetEntity
@@ -199,7 +200,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @return
      */
     default <E> Page<E> dslPage(List<E> content, Pageable pageable, Supplier<SelectQuery> select, boolean useCountWrapped) {
-        return PageableExecutionUtils.getPage(content, pageable, () -> dslFetchCount(select, useCountWrapped));
+        return PageableExecutionUtils.getPage(content, pageable, () -> dslCountQuery(select, useCountWrapped));
     }
 
 
@@ -243,7 +244,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @param useCountWrapped use select count(*) from (given select).
      * @return
      */
-    default Long dslFetchCount(Supplier<SelectQuery> select, boolean useCountWrapped) {
+    default Long dslCountQuery(Supplier<SelectQuery> select, boolean useCountWrapped) {
         SelectQuery query = select.get();
         if (useCountWrapped)
             return Long.valueOf(dslContext().select(DSL.count()).from(query.asTable()).fetchOne().value1());
