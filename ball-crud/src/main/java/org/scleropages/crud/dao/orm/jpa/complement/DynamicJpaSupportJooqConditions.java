@@ -45,7 +45,7 @@ import static org.jooq.impl.DSL.*;
  * Similar with {@link org.scleropages.crud.dao.orm.jpa.DynamicSpecifications} used to convert a group of SearchFilters applying to {@link SelectQuery}.
  * <pre>
  *     This class must complement with JPA environments. query builder base jpa annotations. it's translate jpa entity relations to condition.
- *     The {@link SearchFilter} support basic, single value association,embedded property. but not support collection property.
+ *     The {@link SearchFilter} support basic, single value association,embedded property. but not support collection property（Because there will be duplicate records and too many table joins（3））.
  *          NOTE: You must ensure the accessibility of one-way associations. where the property navigation is always from the relationship maintainer to the target entity.
  *     This class will auto applying join relationship when association property . So Please don't add join to SelectQuery.
  *
