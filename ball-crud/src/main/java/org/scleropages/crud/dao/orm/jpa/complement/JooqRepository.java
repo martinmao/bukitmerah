@@ -169,14 +169,14 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      *
      * @param select
      * @param pageable
-     * @return
+     * @param applySort true will apply sort to select query.
      */
-    default void dslPageable(Supplier<SelectQuery> select, Pageable pageable) {
+    default void dslPageable(Supplier<SelectQuery> select, Pageable pageable, boolean applySort) {
         Assert.notNull(select, "select mut not be null.");
         Assert.notNull(select.get(), "select not supply.");
         Assert.notNull(pageable, "pageable must not be null.");
         SelectQuery query = select.get();
-        if (null != pageable.getSort()) {
+        if (applySort && null != pageable.getSort()) {
             List<OrderField> orderFields = Lists.newArrayList();
             pageable.getSort().forEach(order -> {
                 Field orderField = dslNameToField(order.getProperty());
@@ -212,10 +212,11 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @param select
      * @param pageable
      * @param useCountWrapped
+     * @param applySort
      * @return
      */
-    default Page<? extends Record> dslPage(Supplier<SelectQuery> select, Pageable pageable, boolean useCountWrapped) {
-        dslPageable(select, pageable);
+    default Page<? extends Record> dslPage(Supplier<SelectQuery> select, Pageable pageable, boolean useCountWrapped, boolean applySort) {
+        dslPageable(select, pageable, applySort);
         return dslPage(select.get().fetch(), pageable, select, useCountWrapped);
     }
 
@@ -229,13 +230,13 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @param useCountWrapped
      * @return
      */
-    default Page<? extends Record> dslPage(Supplier<SelectQuery> select, Pageable pageable, Map<String, SearchFilter> searchFilter, boolean useCountWrapped) {
+    default Page<? extends Record> dslPage(Supplier<SelectQuery> select, Pageable pageable, Map<String, SearchFilter> searchFilter, boolean useCountWrapped, boolean applySort) {
         Assert.notNull(select, "select must not be null.");
         Assert.notNull(select.get(), "select not supply.");
         Assert.notNull(searchFilter, "searchFilter must not be null.");
         Condition condition = DynamicJpaSupportJooqConditions.bySearchFilters(select.get(), JpaContexts.getManagedTypeModel(GenericTypes.getClassGenericType(getClass(), JooqRepository.class, 2)), searchFilter.values());
         select.get().addConditions(condition);
-        return dslPage(select, pageable, useCountWrapped);
+        return dslPage(select, pageable, useCountWrapped, applySort);
     }
 
 

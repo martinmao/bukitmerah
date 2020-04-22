@@ -78,11 +78,14 @@ public class ExceptionTranslationInterceptor implements MethodInterceptor, Initi
             return e;
         }
 
-        protected boolean supportBizParamViolationException(Exception e) {
+        protected boolean supportBizParamViolationException(Throwable e) {
             for (Class clazz : bizParamViolationExceptions) {
                 if (ClassUtils.isAssignableValue(clazz, e))
                     return true;
             }
+            Throwable cause = e.getCause();
+            if (null != cause)
+                return supportBizParamViolationException(cause);
             return false;
         }
 
