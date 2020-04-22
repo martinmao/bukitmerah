@@ -15,10 +15,12 @@
  */
 package org.scleropages.crud.web;
 
+import org.scleropages.core.mapper.JsonMapper2;
 import org.scleropages.crud.dao.orm.PageableBuilder;
 import org.scleropages.crud.dao.orm.SearchFilter;
 import org.scleropages.crud.dao.orm.SortBuilder;
 import org.springframework.data.domain.Pageable;
+import org.springframework.util.Assert;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
@@ -53,5 +55,19 @@ public interface GenericAction {
         Map<String, Object> searchParams = Servlets.getParametersStartingWith(request,
                 SearchFilter.SearchFilterBuilder.SEARCH_PREFIX);
         return SearchFilter.SearchFilterBuilder.build(searchParams);
+    }
+
+    /**
+     * @param request
+     * @param parameter
+     * @param exceptedType
+     * @param <T>
+     * @return
+     */
+    default <T> T buildObjectFromRequestParameter(HttpServletRequest request, String parameter, Class<T> exceptedType) {
+        Assert.hasText(parameter, "parameter must not empty text.");
+        String payload = request.getParameter(parameter);
+        Assert.hasText(payload, "bad request. no parameter found from request: " + parameter);
+        return JsonMapper2.fromJson(payload, exceptedType);
     }
 }

@@ -35,6 +35,7 @@ import org.springframework.util.Assert;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.EntityType;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -72,7 +73,8 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      *     MANY_TO_ONE属性的目标实体必须为关系维护方，会创建关联实体对象并设置到目标属性（已经存在则直接设置）
      *     ONE_TO_ONE属性的目标实体必须为关系维护方，会创建关联实体对象并设置到目标属性（已经存在则直接设置）
      *     部分支持的规则：
-     *     ONE_TO_MANY 无法将结果集中的记录进行合并绑定到一的一方，只能将目标实体（多的一方）进行MANY_TO_ONE设置.即目标实体必须为多的一方（且作为关系维护方
+     *     ONE_TO_MANY 无法将结果集中的记录进行合并绑定到一的一方，只能将目标实体（多的一方）进行MANY_TO_ONE设置.即目标实体必须为多的一方（且作为关系维护方）
+     *     客户端需自行实现结果集合并
      *     不支持的关系：
      *     MANY_TO_MANY
      *     ELEMENT_COLLECTION
@@ -82,7 +84,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @param sourceRecord
      * @param targetEntity
      */
-    default void dslRecordInto(R sourceRecord, E targetEntity) {
+    default void dslRecordInto(Record sourceRecord, Object targetEntity) {
 
         Assert.notNull(sourceRecord, "sourceRecord must not be null.");
         Assert.notNull(targetEntity, "targetEntity must not be null.");
@@ -113,7 +115,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
                 }
             } else {//如果column name对应的属性在目标实体中无法找到，则说明该column来源于其关联实体，从table进行实体发现并关联
                 Attribute<?, Object> associatedAttribute = targetEntityModel.attributeByDatabaseTable(tableName);
-                Assert.notNull(associatedAttribute, "can not found attribute associated table: " + tableName + " from: " + targetEntityClass);
+                Assert.notNull(associatedAttribute, "can not found attribute associated table: " + tableName + " from: " + targetEntityClass.getName());
                 Assert.isTrue(!associatedAttribute.isCollection(), "not support collection attribute from: " + associatedAttribute.getName() + " with field: " + field);
                 dslMapAssociatedAttribute(targetEntity, field, fieldName, fieldValue, associatedAttribute);
             }
@@ -142,7 +144,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @param fieldValue
      * @param fieldAttribute
      */
-    default void dslMapAssociatedAttribute(E targetEntity, Field field, String fieldName, Object fieldValue, Attribute<?, Object> fieldAttribute) {
+    default void dslMapAssociatedAttribute(Object targetEntity, Field field, String fieldName, Object fieldValue, Attribute<?, Object> fieldAttribute) {
         if (null == fieldValue)
             return;
         ManagedTypeModel<Object> associatedTypeMode = JpaContexts.getManagedTypeModel(fieldAttribute.getJavaType());
@@ -231,7 +233,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
         Assert.notNull(select, "select must not be null.");
         Assert.notNull(select.get(), "select not supply.");
         Assert.notNull(searchFilter, "searchFilter must not be null.");
-        Condition condition = DynamicJpaSupportJooqConditions.bySearchFilter(select.get(), JpaContexts.getManagedTypeModel(GenericTypes.getClassGenericType(getClass(), JooqRepository.class, 2)), searchFilter.values());
+        Condition condition = DynamicJpaSupportJooqConditions.bySearchFilters(select.get(), JpaContexts.getManagedTypeModel(GenericTypes.getClassGenericType(getClass(), JooqRepository.class, 2)), searchFilter.values());
         select.get().addConditions(condition);
         return dslPage(select, pageable, useCountWrapped);
     }
@@ -293,6 +295,16 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @return
      */
     default Condition dslConditionsAnd(Condition... conditions) {
+        return and(conditions);
+    }
+
+    /**
+     * conjunction a set of conditions use 'and' operator.
+     *
+     * @param conditions
+     * @return
+     */
+    default Condition dslConditionsAnd(Collection<Condition> conditions) {
         return and(conditions);
     }
 

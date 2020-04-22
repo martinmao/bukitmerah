@@ -29,6 +29,7 @@ import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Table;
 import javax.persistence.metamodel.Attribute;
@@ -234,7 +235,7 @@ public class JpaContexts {
             Map<String, SingularAttribute<T, ?>> singularReferencedAttributes = Maps.newHashMap();
             Map<String, SingularAttribute<T, ?>> singularBasicAttributes = Maps.newHashMap();
             Map<String, PluralAttribute<T, ?, ?>> pluralAttributes = Maps.newHashMap();
-            Map<String, Attribute> columnAttributes = Maps.newHashMap();
+            Map<String, Attribute<T, ?>> columnAttributes = Maps.newHashMap();
             Map<String, Attribute<T, ?>> tableAttributes = Maps.newHashMap();
             managedType.getAttributes().forEach(attr -> {
                 String attrName = attr.getName();
@@ -252,18 +253,18 @@ public class JpaContexts {
                     pluralAttributes.put(attrName, (PluralAttribute<T, ?, ?>) attr);
                 }
                 Stream.of(obtainDatabaseColumnsFromAttribute(attr)).forEach(column -> {
-                    Assert.isNull(columnAttributes.putIfAbsent(column, attr), "duplicate column name found: " + column + " from: " + typeClass);
+                    Assert.isNull(columnAttributes.putIfAbsent(column.toLowerCase(), (Attribute<T, ?>) attr), "duplicate column name found: " + column + " from: " + typeClass);
                 });
                 String table = obtainDatabaseTableFromAttribute(attr);
                 if (StringUtils.hasText(table))
-                    tableAttributes.put(table, (Attribute<T, ?>) attr);
+                    tableAttributes.put(table.toLowerCase(), (Attribute<T, ?>) attr);
             });
             this.attributes = Collections.unmodifiableMap(attributes);
             this.singularAttributes = Collections.unmodifiableMap(singularAttributes);
             this.singularReferencedAttributes = Collections.unmodifiableMap(singularReferencedAttributes);
             this.singularBasicAttributes = Collections.unmodifiableMap(singularBasicAttributes);
             this.pluralAttributes = Collections.unmodifiableMap(pluralAttributes);
-            this.columnAttributes = Collections.unmodifiableMap(Maps.newConcurrentMap());
+            this.columnAttributes = Collections.unmodifiableMap(columnAttributes);
             this.tableAttributes = Collections.unmodifiableMap(tableAttributes);
             this.attributeAnnotations = Maps.newConcurrentMap();
         }
@@ -277,7 +278,8 @@ public class JpaContexts {
          * @return
          */
         public <Y> Attribute<T, Y> attributeByDatabaseColumn(String columnName) {
-            return (Attribute<T, Y>) columnAttributes.get(columnName);
+            Assert.hasText(columnName, "not allowed empty column name.");
+            return (Attribute<T, Y>) columnAttributes.get(columnName.toLowerCase());
         }
 
         /**
@@ -288,7 +290,8 @@ public class JpaContexts {
          * @return
          */
         public <Y> Attribute<T, Y> attributeByDatabaseTable(String tableName) {
-            return (Attribute<T, Y>) tableAttributes.get(tableName);
+            Assert.hasText(tableName,"not allowed empty table name.");
+            return (Attribute<T, Y>) tableAttributes.get(tableName.toLowerCase());
         }
 
 
@@ -498,6 +501,11 @@ public class JpaContexts {
          */
         protected String[] obtainDatabaseColumnsFromAttribute(Attribute attribute) {
             Member member = attribute.getJavaMember();
+            Id id = findAnnotation(member, Id.class);
+            if (null != id) {
+                Column column = findAnnotation(member, Column.class);
+                return new String[]{null != column ? column.name() : "id"};
+            }
             Column column = findAnnotation(member, Column.class);
             if (null != column)
                 return new String[]{column.name()};

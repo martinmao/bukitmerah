@@ -100,7 +100,7 @@ public class JsonMapper {
     }
 
     /**
-     * 反序列化复杂Collection如List<Bean>, 先使用createCollectionType()或contructMapType()构造类型, 然后调用本函数.
+     * 反序列化复杂Collection如List<Bean>, 先使用createCollectionType()或constructMapType()构造类型, 然后调用本函数.
      *
      * @param jsonString
      * @param javaType
@@ -125,14 +125,14 @@ public class JsonMapper {
      * 构造Collection类型.
      */
     @SuppressWarnings("rawtypes")
-    public JavaType contructCollectionType(Class<? extends Collection> collectionClass, Class<?> elementClass) {
+    public JavaType constructCollectionType(Class<? extends Collection> collectionClass, Class<?> elementClass) {
         return mapper.getTypeFactory().constructCollectionType(collectionClass, elementClass);
     }
 
     /**
      * 构造Map类型.
      */
-    public JavaType contructMapType(@SuppressWarnings("rawtypes") Class<? extends Map> mapClass, Class<?> keyClass, Class<?> valueClass) {
+    public JavaType constructMapType(@SuppressWarnings("rawtypes") Class<? extends Map> mapClass, Class<?> keyClass, Class<?> valueClass) {
         return mapper.getTypeFactory().constructMapType(mapClass, keyClass, valueClass);
     }
 

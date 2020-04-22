@@ -56,7 +56,21 @@ import static org.jooq.impl.DSL.*;
 public abstract class DynamicJpaSupportJooqConditions {
 
 
-    public static Condition bySearchFilter(SelectQuery query, final ManagedTypeModel<?> root, final Collection<SearchFilter> filters) {
+    /**
+     * create condition by given query and {@link SearchFilter}s.
+     * {@link ManagedTypeModel} is a jpa entity managed type model. it's will applying search filter field name in entity context.
+     * <pre>
+     * support basic, single value association,embedded property. but not support collection property（Because there will be duplicate records and too many table joins（>=3. this will causes database slow query）.
+     * NOTE: You must ensure the accessibility of one-way associations. where the property navigation is always from the relationship maintainer to the target entity.
+     * This method will auto applying join relationship when association property . So please don't add join to SelectQuery.
+     * </pre>
+     *
+     * @param query
+     * @param root
+     * @param filters
+     * @return
+     */
+    public static Condition bySearchFilters(SelectQuery query, final ManagedTypeModel<?> root, final Collection<SearchFilter> filters) {
         Assert.notNull(query, "given query must not be null.");
         Assert.notNull(root, "given root of ManagedTypeModel must not be null.");
         Assert.isTrue(root.isEntityType(), "given ManagedTypeModel not an instance of EntityType: " + root.managedType().getJavaType());
@@ -180,52 +194,41 @@ public abstract class DynamicJpaSupportJooqConditions {
 
     }
 
-
-    private static void processBasicProperty(Field field, SearchFilter filter, List<Condition> conditions) {
-        if (SearchFilter.VALUE_IS_NULL.equals(filter.value)) {
-            conditions.add(field.isNull());
-            return;
-        }
-        if (SearchFilter.VALUE_IS_NOT_NULL.equals(filter.value)) {
-            conditions.add(field.isNotNull());
-            return;
-        }
+    public static Condition bySearchFilter(Field field, SearchFilter filter) {
+        if (SearchFilter.VALUE_IS_NULL.equals(filter.value))
+            return field.isNull();
+        if (SearchFilter.VALUE_IS_NOT_NULL.equals(filter.value))
+            return field.isNotNull();
         switch (filter.operator) {
             case EQ:
-                conditions.add(field.eq(filter.value));
-                break;
+                return field.eq(filter.value);
             case NEQ:
-                conditions.add(field.ne(filter.value));
-                break;
+                return field.ne(filter.value);
             case LIKE:
-                conditions.add(field.like("%" + filter.value + "%"));
-                break;
+                return field.like("%" + filter.value + "%");
             case NLIKE:
-                conditions.add(field.notLike("%" + filter.value + "%"));
-                break;
+                return field.notLike("%" + filter.value + "%");
             case GT:
-                conditions.add(field.gt(filter.value));
-                break;
+                return field.gt(filter.value);
             case LT:
-                conditions.add(field.lt(filter.value));
-                break;
+                return field.lt(filter.value);
             case GTE:
-                conditions.add(field.gt(filter.value).or(field.eq(filter.value)));
-                break;
+                return field.gt(filter.value).or(field.eq(filter.value));
             case LTE:
-                conditions.add(field.lt(filter.value).or(field.eq(filter.value)));
-                break;
+                return field.lt(filter.value).or(field.eq(filter.value));
             case NULL:
-                conditions.add(field.isNull());
-                break;
+                return field.isNull();
             case NOTNULL:
-                conditions.add(field.isNotNull());
-                break;
+                return field.isNotNull();
             case IN:
-                conditions.add(field.in(StringUtils.split(String.valueOf(filter.value), ",")));
-                break;
+                return field.in(StringUtils.split(String.valueOf(filter.value), ","));
             default:
                 throw new IllegalArgumentException("unsupported filter operator: " + filter.operator.name());
         }
+    }
+
+
+    private static void processBasicProperty(Field field, SearchFilter filter, List<Condition> conditions) {
+        conditions.add(bySearchFilter(field, filter));
     }
 }

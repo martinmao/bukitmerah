@@ -18,7 +18,7 @@ package org.scleropages.crud.exception;
 import com.google.common.collect.Lists;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.scleropages.core.mapper.JsonMapper;
+import org.scleropages.core.mapper.JsonMapper2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -64,15 +64,15 @@ public class ExceptionTranslationInterceptor implements MethodInterceptor, Initi
 
         @Override
         public Exception translation(MethodInvocation invocation, Exception e) {
+            Object[] arguments = invocation.getArguments();
             if (supportBizParamViolationException(e)) {
-                Object[] arguments = invocation.getArguments();
                 logger.warn("{}: BizParamViolationException: [{}]. from: [{}] with arguments: {}", BizParamViolationException.CODE,
-                        e.getMessage(), invocation.getMethod().toGenericString(), JsonMapper.nonDefaultMapper().toJson(arguments));
+                        e.getMessage(), invocation.getMethod().toGenericString(), JsonMapper2.toJson(arguments));
                 return e instanceof BizParamViolationException ? e : new BizParamViolationException(e.getMessage(), e, arguments);
             }
             if (supportBizViolationExceptions(e)) {
-                logger.warn("{}: BizViolationException: [{}]. from: [{}]", BizViolationException.CODE,
-                        e.getMessage(), invocation.getMethod().toGenericString());
+                logger.warn("{}: BizViolationException: [{}]. from: [{}] with arguments: {}", BizViolationException.CODE,
+                        e.getMessage(), invocation.getMethod().toGenericString(), JsonMapper2.toJson(arguments));
                 return e instanceof BizViolationException ? e : new BizViolationException(e.getMessage(), e);
             }
             return e;
