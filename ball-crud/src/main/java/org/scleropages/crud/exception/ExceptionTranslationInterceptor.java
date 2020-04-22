@@ -83,14 +83,14 @@ public class ExceptionTranslationInterceptor implements MethodInterceptor, Initi
                 if (ClassUtils.isAssignableValue(clazz, e))
                     return true;
             }
-            Throwable cause = e.getCause();
+            Throwable cause = e.getCause();//参数错误异常容易被隐藏在底层调用栈中（持久层校验），会被框架包装为各种xxx access exception.
             if (null != cause)
                 return supportBizParamViolationException(cause);
             return false;
         }
 
         protected boolean supportBizViolationExceptions(Exception e) {
-            for (Class clazz : bizViolationExceptions) {
+            for (Class clazz : bizViolationExceptions) {//违反业务规则校验往往只在manager层中抛出，一般不会被框架包装为其他异常
                 if (ClassUtils.isAssignableValue(clazz, e))
                     return true;
             }
