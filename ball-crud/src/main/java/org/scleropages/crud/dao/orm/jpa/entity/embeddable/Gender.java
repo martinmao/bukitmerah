@@ -22,13 +22,13 @@ package org.scleropages.crud.dao.orm.jpa.entity.embeddable;
  */
 public enum Gender {
 
-	FEMALE("Female", "女"), MALE("Male", "男"), UNKOWN("Unkown", "未知");
+	FEMALE("Female", "女"), MALE("Male", "男"), UNKNOWN("Unknown", "未知");
 
 	private String tag;
 	private String localTag;
 	
 
-	private Gender(String tag, String localTag) {
+	Gender(String tag, String localTag) {
 		this.tag = tag;
 		this.localTag = localTag;
 	}
