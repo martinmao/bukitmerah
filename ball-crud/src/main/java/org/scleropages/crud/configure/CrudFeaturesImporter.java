@@ -24,6 +24,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.Lists;
 import org.scleropages.core.mapper.JsonMapper2;
 import org.scleropages.crud.FrameworkContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.jackson.JacksonProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -43,6 +45,9 @@ import java.util.Optional;
 @Import({BizExceptionTranslationConfiguration.class, DataSourceRoutingConfiguration.class})
 public class CrudFeaturesImporter implements ApplicationListener<ContextRefreshedEvent> {
 
+
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
+
     @Bean
     public FrameworkContext frameworkContext() {
         return new FrameworkContext();
@@ -57,11 +62,14 @@ public class CrudFeaturesImporter implements ApplicationListener<ContextRefreshe
     }
 
     private void applyJacksonConfigureToFastJson(JacksonProperties jacksonProperties) {
+        logger.info("Detect JacksonProperties in spring context. Populating and apply to FastJSON...");
         List<Feature> parserFeatures = Lists.newArrayList();
         List<SerializerFeature> generateFeatures = Lists.newArrayList();
         Optional.ofNullable(jacksonProperties.getDateFormat()).ifPresent(s -> {
             generateFeatures.add(SerializerFeature.WriteDateUseDateFormat);
             JSON.DEFFAULT_DATE_FORMAT = jacksonProperties.getDateFormat();
+            if (logger.isTraceEnabled())
+                logger.trace("Applying date format: {}", jacksonProperties.getDateFormat());
         });
         Optional.ofNullable(jacksonProperties.getPropertyNamingStrategy()).ifPresent(s -> {
             PropertyNamingStrategy propertyNamingStrategy = null;
@@ -74,10 +82,14 @@ public class CrudFeaturesImporter implements ApplicationListener<ContextRefreshe
             if (Objects.equals(s, "com.fasterxml.jackson.databind.PropertyNamingStrategy.UpperCamelCaseStrategy"))
                 propertyNamingStrategy = PropertyNamingStrategy.PascalCase;
             SerializeConfig.globalInstance.propertyNamingStrategy = propertyNamingStrategy;
+            if (logger.isTraceEnabled())
+                logger.trace("Applying property naming strategy: {}", s);
         });
         Optional.ofNullable(jacksonProperties.getSerialization()).ifPresent(serializationFeatureBooleanMap -> {
             if (serializationFeatureBooleanMap.getOrDefault(SerializationFeature.INDENT_OUTPUT, false))
                 generateFeatures.add(SerializerFeature.PrettyFormat);
+            if (logger.isTraceEnabled())
+                logger.trace("Applying print pretty: {}", serializationFeatureBooleanMap.getOrDefault(SerializationFeature.INDENT_OUTPUT, false));
         });
         JsonMapper2.applyFeatureConfig(parserFeatures, generateFeatures);
     }

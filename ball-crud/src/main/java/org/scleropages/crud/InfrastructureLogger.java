@@ -46,8 +46,4 @@ public abstract class InfrastructureLogger {
         if (DEFAULT_LOGGER.isErrorEnabled())
             logger.accept(DEFAULT_LOGGER);
     }
-
-    public static void main(String[] args) {
-        InfrastructureLogger.info(logger -> logger.info("xxxx"));
-    }
 }
