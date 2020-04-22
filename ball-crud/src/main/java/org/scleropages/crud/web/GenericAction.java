@@ -57,17 +57,17 @@ public interface GenericAction {
         return SearchFilter.SearchFilterBuilder.build(searchParams);
     }
 
+
     /**
-     * @param request
-     * @param parameter
+     * build a object using given json text and excepted type.
+     *
+     * @param payload
      * @param exceptedType
      * @param <T>
      * @return
      */
-    default <T> T buildObjectFromRequestParameter(HttpServletRequest request, String parameter, Class<T> exceptedType) {
-        Assert.hasText(parameter, "parameter must not empty text.");
-        String payload = request.getParameter(parameter);
-        Assert.hasText(payload, "bad request. no parameter found from request: " + parameter);
+    default <T> T buildObjectFromJsonPayload(String payload, Class<T> exceptedType) {
+        Assert.hasText(payload, "bad request. payload not allow empty text.");
         return JsonMapper2.fromJson(payload, exceptedType);
     }
 }
