@@ -27,6 +27,7 @@ import org.scleropages.core.mapper.JsonMapper2;
 import org.scleropages.crud.FrameworkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.jackson.JacksonProperties;
 import org.springframework.cache.CacheManager;
@@ -74,7 +75,7 @@ public class CrudFeaturesImporter implements ApplicationListener<ContextRefreshe
                 protected Collection<String> getCacheNames(CacheOperationInvocationContext<?> context) {
                     Collection<String> cacheNames = super.getCacheNames(context);
                     if (CollectionUtils.isEmpty(cacheNames)) {
-                        String defaultCacheName = defaultCacheNames.computeIfAbsent(context.getMethod(), m -> (context.getTarget().getClass().getName() + "#" + m.getName()));
+                        String defaultCacheName = defaultCacheNames.computeIfAbsent(context.getMethod(), m -> (AopUtils.getTargetClass(context.getTarget()).getClass().getName() + "#" + m.getName()));
                         return Lists.newArrayList(defaultCacheName);
                     }
                     return cacheNames;
