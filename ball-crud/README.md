@@ -3,8 +3,8 @@
 ## 业务模块层次结构
 ```
 <business_model_package>
-├── ApplicationManager.java: 业务实现
-├── entity: jpa entity and repository
+├── ApplicationManager.java: 应用层管理器，负责事务边界，技术性参数校验，通过repository的数据获取，调用业务单元执行业务，并将业务产生的状态变更通过repository持久化
+├── entity: entity and repository
 │   ├── ApplicationEntity.java
 │   ├── ApplicationEntityRepository.java
 │   └── ApplicationFunctionEntity.java
@@ -45,7 +45,53 @@ interface UserRepository<UserEntity> ...{
     //查询给定部门下所有用户，不建议的姿势
     Page<UserEntity> findByDept_Id(Long deptId);
 }
+interface DepartmentRepository<DepartmentEntity>  ...{
+    //查询给定部门下所有用户，建议的姿势
+    Page<UserEntity> findUserById(Long deptId);
+}
+```
+## 持久层方法命名规范
+方法前缀
+```
+save，保存
+get，返回0或1个结果，如果可能为空尽可能返回Optional
+find，返回0-多个结果
+findAll，返回0-全部结果
+exists，返回一个Boolean，意义上表明是否存在
+count，返回一个计数统计结果
+sum，返回一个计数汇总统计结果
+```
+检索条件使用By作为统一的介词，后面跟条件属性：如
+```
+findByEmail
+```
+如果检索（更新）不是一个完整Entity，方法名必须明确包含被检索（更新）的信息：如
+```
+findNameAndEmailByUserId
+updatePassword
+```
+更新操作必须以主键作为条件，不允许其他业务含义字段作为更新条件（即便其具备唯一性），基于此前提，更新不需要申明条件
+```
+updatePasswordByUsername，不允许
+updatePassword(Long id)，允许
+```
+## 应用层规范
+应用层使用的申明式校验框架（JSR-303）只能用于技术性校验（或国际通用的业务属性，如年龄，性别，Email,URL等校验），即确保程序可以正常执行（检查空值，空串，空集，类型兼容，大小兼容），不会出现NPE（NullPointException），NFE（NumberFormatException）CCE（ClassCastException）等错误
+而业务规则性校验，必须完整在业务层代码中实现(提供完整清晰的规则视图)。且业务规则抛出的校验异常（类型，参数异常，规则异常）必须明确包含业务错误信息.
+```
+@Max("5")
+@Min("1")
+int orderState;
+...
 
+void pay(@Valid Order order){//错误的示范，不清楚1-5代表什么，1-5是订单几种状态，属于业务范畴
+
+}
+void pay(Order order){
+    assertOrderStateValid(Order order);//orderState range in(1-5)...
+    ....business rules
+    changeOrderState(order,OrderState.PAY);//check whether can change state.
+}
 ```
 
     

@@ -19,6 +19,7 @@ import org.scleropages.core.util.GenericTypes;
 import org.scleropages.crud.dao.orm.ModelMapper;
 import org.scleropages.crud.dao.orm.ModelMapperRepository;
 import org.scleropages.crud.dao.orm.SearchFilter;
+import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -41,6 +42,7 @@ import java.util.Map;
  *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
+@CacheConfig(cacheResolver = "defaultCacheResolver")
 public interface GenericRepository<M, MP, T, ID> extends JpaRepository<T, ID>, JpaSpecificationExecutor<T> {
 
 

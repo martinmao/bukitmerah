@@ -22,19 +22,29 @@ import com.alibaba.fastjson.serializer.SerializeConfig;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.scleropages.core.mapper.JsonMapper2;
 import org.scleropages.crud.FrameworkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.jackson.JacksonProperties;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.interceptor.CacheOperationInvocationContext;
+import org.springframework.cache.interceptor.CacheResolver;
+import org.springframework.cache.interceptor.SimpleCacheResolver;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.util.CollectionUtils;
 
+import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -45,12 +55,32 @@ import java.util.Optional;
 @Import({BizExceptionTranslationConfiguration.class, DataSourceRoutingConfiguration.class})
 public class CrudFeaturesImporter implements ApplicationListener<ContextRefreshedEvent> {
 
-
     protected final Logger logger = LoggerFactory.getLogger(getClass());
+
+    private Map<Method, String> defaultCacheNames = Maps.newConcurrentMap();
 
     @Bean
     public FrameworkContext frameworkContext() {
         return new FrameworkContext();
+    }
+
+
+    @Bean("defaultCacheResolver")
+    public CacheResolver cacheResolver(ObjectProvider<CacheManager> cacheManagers) {
+        CacheManager ifAvailable = cacheManagers.getIfAvailable();
+        if (null != ifAvailable)
+            return new SimpleCacheResolver(ifAvailable) {
+                @Override
+                protected Collection<String> getCacheNames(CacheOperationInvocationContext<?> context) {
+                    Collection<String> cacheNames = super.getCacheNames(context);
+                    if (CollectionUtils.isEmpty(cacheNames)) {
+                        String defaultCacheName = defaultCacheNames.computeIfAbsent(context.getMethod(), m -> (context.getTarget().getClass().getName() + "#" + m.getName()));
+                        return Lists.newArrayList(defaultCacheName);
+                    }
+                    return cacheNames;
+                }
+            };
+        return new SimpleCacheResolver();
     }
 
     @Override
