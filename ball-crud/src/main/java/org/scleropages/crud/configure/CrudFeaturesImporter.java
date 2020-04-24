@@ -27,7 +27,6 @@ import org.scleropages.core.mapper.JsonMapper2;
 import org.scleropages.crud.FrameworkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.jackson.JacksonProperties;
 import org.springframework.cache.CacheManager;
@@ -40,6 +39,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Method;
@@ -75,13 +75,20 @@ public class CrudFeaturesImporter implements ApplicationListener<ContextRefreshe
                 protected Collection<String> getCacheNames(CacheOperationInvocationContext<?> context) {
                     Collection<String> cacheNames = super.getCacheNames(context);
                     if (CollectionUtils.isEmpty(cacheNames)) {
-                        String defaultCacheName = defaultCacheNames.computeIfAbsent(context.getMethod(), m -> (AopUtils.getTargetClass(context.getTarget()).getClass().getName() + "#" + m.getName()));
+                        String defaultCacheName = defaultCacheNames.computeIfAbsent(
+                                context.getMethod(),
+                                m -> (computeCacheName(context)));
                         return Lists.newArrayList(defaultCacheName);
                     }
                     return cacheNames;
                 }
             };
         return new SimpleCacheResolver();
+    }
+
+    protected String computeCacheName(CacheOperationInvocationContext context) {
+        return ClassUtils.getQualifiedMethodName(context.getMethod());
+//      return AopUtils.getTargetClass(context.getTarget()).getName() + "#" + context.getMethod().getName();
     }
 
     @Override
