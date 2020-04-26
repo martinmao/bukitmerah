@@ -42,7 +42,7 @@ import java.util.Objects;
 import static org.jooq.impl.DSL.*;
 
 /**
- * Similar with {@link org.scleropages.crud.dao.orm.jpa.DynamicSpecifications} used to convert a group of SearchFilters applying to {@link SelectQuery}.
+ * Similar with {@link org.scleropages.crud.dao.orm.jpa.SearchFilterSpecifications} used to convert a group of SearchFilters applying to {@link SelectQuery}.
  * <pre>
  *     This class must complement with JPA environments. query builder base jpa annotations. it's translate jpa entity relations to condition.
  *     The {@link SearchFilter} support basic, single value association,embedded property. but not support collection property（Because there will be duplicate records and too many table joins（3））.
@@ -53,7 +53,7 @@ import static org.jooq.impl.DSL.*;
  *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
-public abstract class DynamicJpaSupportJooqConditions {
+public abstract class JpaSupportJooqConditions {
 
 
     /**

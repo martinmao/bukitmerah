@@ -26,12 +26,20 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * Represents sort used for as order to fetch data from repository.
+ *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
 public abstract class SortBuilder {
 
+    /**
+     * sort parameters prefix.
+     */
     public static final String SORT_PREFIX = "sort_";
 
+    /**
+     *
+     */
     public static final String SORT_FIELDS_PARAM_NAME = "fields";
 
     public static final String SORT_DIRECTION_PARAM_NAME = "direction";
@@ -45,19 +53,27 @@ public abstract class SortBuilder {
     public static final Sort DEFAULT_NO_SORT = Sort.unsorted();
 
     /**
-     * Sort_fields parameter's value format is:
-     * FieldName1_FieldName2_FieldNameN...
+     * A easy way to build {@link Sort} from given sort map. make sure sort params keys with same prefix '{@link #SORT_PREFIX}'.
+     * The key of {@link #SORT_FIELDS_PARAM_NAME} as sort field. and {@link #DEFAULT_DIRECTION} as sort direction.<br>
+     * The sort field must defined as follow format:
+     * <pre>
+     *     sort_fields: fieldName1_fieldName2_fieldNameN...(use '_' as filed separator)
+     * </pre>
+     * The sort direction as follow:
+     * <pre>
+     *     sort_direction: {@link Direction#ASC} or {@link Direction#DESC}
+     * </pre>
      *
      * @param sortParams
-     * @param defaultSort
+     * @param defaultSortField if sortParams is empty use this as default sort field with {@link #DEFAULT_DIRECTION}.
      * @return
      */
-    public static Sort build(Map<String, Object> sortParams, String defaultSort) {
+    public static Sort build(Map<String, Object> sortParams, String defaultSortField) {
         if (CollectionUtils.isEmpty(sortParams)) {
-            if (StringUtils.isBlank(defaultSort))
+            if (StringUtils.isBlank(defaultSortField))
                 return DEFAULT_NO_SORT;
             else
-                return Sort.by(DEFAULT_DIRECTION, defaultSort);
+                return Sort.by(DEFAULT_DIRECTION, defaultSortField);
         }
         List<Order> orders = Lists.newArrayList();
 
@@ -78,6 +94,22 @@ public abstract class SortBuilder {
         return Sort.by(orders);
     }
 
+    /**
+     * A easy way to build {@link Sort} from given sort map. make sure sort params keys with same prefix 'sort_'.
+     * The key of {@link #SORT_FIELDS_PARAM_NAME} as sort field. and {@link #DEFAULT_DIRECTION} as sort direction.
+     * The sort field must defined as follow format:
+     * <pre>
+     *     fieldName1_fieldName2_fieldNameN...(use '_' as filed separator)
+     * </pre>
+     * The sort direction as follow:
+     * <pre>
+     *     {@link Direction#ASC}
+     *     {@link Direction#DESC}
+     * </pre>
+     *
+     * @param sortParams
+     * @return
+     */
     public static Sort build(Map<String, Object> sortParams) {
         return build(sortParams, "");
     }
