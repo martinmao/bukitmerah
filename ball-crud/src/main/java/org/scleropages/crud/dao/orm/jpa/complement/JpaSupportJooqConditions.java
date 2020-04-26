@@ -222,6 +222,16 @@ public abstract class JpaSupportJooqConditions {
                 return field.isNotNull();
             case IN:
                 return field.in(StringUtils.split(String.valueOf(filter.value), ","));
+            case RANGE: {
+                String[] split = StringUtils.split(String.valueOf(filter.value), ",");
+                Assert.isTrue(split.length == 2, "range in operator must use ',' as separator and must have tow splits.");
+                return field.gt(split[0]).or(field.eq(split[0])).or(field.lt(split[1]).or(field.eq(split[1])));
+            }
+            case RANGEIN: {
+                String[] split = StringUtils.split(String.valueOf(filter.value), ",");
+                Assert.isTrue(split.length == 2, "range operator must use ',' as separator and must have tow splits.");
+                return field.gt(split[0]).or(field.lt(split[1]));
+            }
             default:
                 throw new IllegalArgumentException("unsupported filter operator: " + filter.operator.name());
         }

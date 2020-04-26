@@ -44,10 +44,12 @@ public class SearchFilter {
      * {@link #NOTNULL}: is not null
      * {@link #IN}: in
      * {@link #NLIKE}: not like
+     * {@link #RANGE}: >=x or <= y
+     * {@link #RANGEIN}: >x or < y
      * </pre>
      */
     public enum Operator {
-        EQ, NEQ, LIKE, GT, LT, GTE, LTE, NULL, NOTNULL, IN, NLIKE
+        EQ, NEQ, LIKE, GT, LT, GTE, LTE, NULL, NOTNULL, IN, NLIKE, RANGE, RANGEIN
     }
 
     /**

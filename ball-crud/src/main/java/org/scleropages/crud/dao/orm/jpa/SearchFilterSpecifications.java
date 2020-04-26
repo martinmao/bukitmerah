@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.scleropages.core.util.Collections3;
 import org.scleropages.crud.dao.orm.SearchFilter;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.util.Assert;
 
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Path;
@@ -86,7 +87,7 @@ public class SearchFilterSpecifications {
                             filterPredicates.add(builder.notEqual(expression, filter.value));
                             break;
                         case LIKE:
-                            filterPredicates.add(builder.like(expression,filter.value + "%"));
+                            filterPredicates.add(builder.like(expression, filter.value + "%"));
                             break;
                         case NLIKE:
                             filterPredicates.add(builder.notLike(expression, filter.value + "%"));
@@ -110,8 +111,24 @@ public class SearchFilterSpecifications {
                             filterPredicates.add(builder.isNotNull(expression));
                             break;
                         case IN:
-                            Object[] values = StringUtils.split((String) filter.value, ",");
+                            Object[] values = StringUtils.split(String.valueOf(filter.value), ",");
                             filterPredicates.add(expression.in(values));
+                            break;
+                        case RANGE: {
+                            Object[] split = StringUtils.split(String.valueOf(filter.value), ",");
+                            Assert.isTrue(split.length == 2, "range in operator must use ',' as separator and must have tow splits.");
+                            Predicate or = builder.or(builder.greaterThanOrEqualTo(expression, (Comparable) split[0]), builder.lessThanOrEqualTo(expression, (Comparable) split[1]));
+                            filterPredicates.add(or);
+                            break;
+                        }
+                        case RANGEIN: {
+                            Object[] split = StringUtils.split(String.valueOf(filter.value), ",");
+                            Assert.isTrue(split.length == 2, "range operator must use ',' as separator and must have tow splits.");
+                            Predicate or = builder.or(builder.greaterThan(expression, (Comparable) split[0]), builder.lessThan(expression, (Comparable) split[1]));
+                            filterPredicates.add(or);
+                            break;
+                        }default:
+                            throw new IllegalArgumentException("unsupported filter operator: " + filter.operator.name());
                     }
                 }
                 if (filterPredicates.size() == 1) {
@@ -124,7 +141,6 @@ public class SearchFilterSpecifications {
                         predicates
                                 .add(builder.or(filterPredicates.toArray(new Predicate[filterPredicates.size()])));
                 }
-
             }
 
             // 将所有条件用 and 联合起来
