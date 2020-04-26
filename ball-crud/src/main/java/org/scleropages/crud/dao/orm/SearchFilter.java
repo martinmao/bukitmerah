@@ -66,10 +66,10 @@ public class SearchFilter {
                 // 过滤掉空值
                 String key = entry.getKey();
                 Object value = entry.getValue();
-                if (StringUtils.isBlank(value.toString())) {
+                if (null == value || StringUtils.isBlank(value.toString())) {
                     continue;
                 }
-                SearchFilter filter = null;
+                SearchFilter filter;
 
                 String[] names = StringUtils.split(key, "_");
                 if (names.length == 1) {/* no operator and conjunction. by default. used EQ as operator */
