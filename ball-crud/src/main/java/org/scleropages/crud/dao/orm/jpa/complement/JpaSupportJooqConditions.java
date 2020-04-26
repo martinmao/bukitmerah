@@ -205,9 +205,9 @@ public abstract class JpaSupportJooqConditions {
             case NEQ:
                 return field.ne(filter.value);
             case LIKE:
-                return field.like("%" + filter.value + "%");
+                return field.like(filter.value + "%");
             case NLIKE:
-                return field.notLike("%" + filter.value + "%");
+                return field.notLike(filter.value + "%");
             case GT:
                 return field.gt(filter.value);
             case LT:

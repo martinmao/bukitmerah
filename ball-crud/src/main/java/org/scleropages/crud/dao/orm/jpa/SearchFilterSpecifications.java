@@ -86,10 +86,10 @@ public class SearchFilterSpecifications {
                             filterPredicates.add(builder.notEqual(expression, filter.value));
                             break;
                         case LIKE:
-                            filterPredicates.add(builder.like(expression, "%" + filter.value + "%"));
+                            filterPredicates.add(builder.like(expression,filter.value + "%"));
                             break;
                         case NLIKE:
-                            filterPredicates.add(builder.notLike(expression, "%" + filter.value + "%"));
+                            filterPredicates.add(builder.notLike(expression, filter.value + "%"));
                             break;
                         case GT:
                             filterPredicates.add(builder.greaterThan(expression, (Comparable) filter.value));
