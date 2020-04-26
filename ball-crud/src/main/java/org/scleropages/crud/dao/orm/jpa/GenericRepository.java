@@ -77,7 +77,7 @@ public interface GenericRepository<M, MP, T, ID> extends JpaRepository<T, ID>, J
      * @return
      */
     default Page<M> findPage(Map<String, SearchFilter> searchFilters, Pageable pageable) {
-        Specification<T> spec = DynamicSpecifications.bySearchFilter(searchFilters.values(), GenericTypes.getClassGenericType(getClass(), GenericRepository.class, 2));
+        Specification<T> spec = SearchFilterSpecifications.bySearchFilter(searchFilters.values(), GenericTypes.getClassGenericType(getClass(), GenericRepository.class, 2));
         return findPage(spec, pageable);
     }
 
