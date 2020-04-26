@@ -117,15 +117,15 @@ public class SearchFilterSpecifications {
                         case RANGE: {
                             Object[] split = StringUtils.split(String.valueOf(filter.value), ",");
                             Assert.isTrue(split.length == 2, "range in operator must use ',' as separator and must have tow splits.");
-                            Predicate or = builder.or(builder.greaterThanOrEqualTo(expression, (Comparable) split[0]), builder.lessThanOrEqualTo(expression, (Comparable) split[1]));
-                            filterPredicates.add(or);
+                            Predicate and = builder.and(builder.greaterThanOrEqualTo(expression, (Comparable) split[0]), builder.lessThanOrEqualTo(expression, (Comparable) split[1]));
+                            filterPredicates.add(and);
                             break;
                         }
                         case RANGEIN: {
                             Object[] split = StringUtils.split(String.valueOf(filter.value), ",");
                             Assert.isTrue(split.length == 2, "range operator must use ',' as separator and must have tow splits.");
-                            Predicate or = builder.or(builder.greaterThan(expression, (Comparable) split[0]), builder.lessThan(expression, (Comparable) split[1]));
-                            filterPredicates.add(or);
+                            Predicate and = builder.and(builder.greaterThan(expression, (Comparable) split[0]), builder.lessThan(expression, (Comparable) split[1]));
+                            filterPredicates.add(and);
                             break;
                         }default:
                             throw new IllegalArgumentException("unsupported filter operator: " + filter.operator.name());
