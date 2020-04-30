@@ -3,7 +3,7 @@
 ## 业务模块层次结构
 ```
 <business_model_package>
-├── ApplicationManager.java: 应用层管理器，负责事务边界，技术性参数校验，通过repository的数据获取，调用业务单元执行业务，并将业务产生的状态变更通过repository持久化
+├── ApplicationManager.java: 应用层管理器，负责事务边界，技术性参数校验，通过repository(不仅仅是数据库，其他中间件，三方调用统称为repository)的数据获取，调用业务单元执行业务，并将业务产生的状态变更通过repository持久化
 ├── entity: entity and repository
 │   ├── ApplicationEntity.java
 │   ├── ApplicationEntityRepository.java
@@ -55,7 +55,7 @@ interface DepartmentRepository<DepartmentEntity>  ...{
 ```
 save，保存
 get，返回0或1个结果，如果可能为空尽可能返回Optional
-find，返回0-多个结果
+find，返回0-多个结果(通常结果集是一个page)
 findAll，返回0-全部结果
 exists，返回一个Boolean，意义上表明是否存在
 count，返回一个计数统计结果
@@ -70,13 +70,22 @@ findByEmail
 findNameAndEmailByUserId
 updatePassword
 ```
-更新操作必须以主键作为条件，不允许其他业务含义字段作为更新条件（即便其具备唯一性），基于此前提，更新不需要申明条件
+更新操作尽可能以主键（唯一约束）作为条件，不建议其他业务含义字段作为更新条件（即便其具备业务唯一性，但因业务易变 还是不建议），基于此前提，更新不需要申明条件
 ```
-updatePasswordByUsername，不允许
-updatePassword(Long id)，允许
+updatePasswordByUsername，不建议
+updatePassword(Long id)，建议
+特例，如果明确在表中定义了唯一约束，则允许基于唯一约束进行更新，此时方法签名中必须明确包含更新条件
+updatePasswordByEmail(String email),//UNIQUE INDEX EMAIL.
+```
+禁止持久层使用create作为前缀（其可能包含create&save的过程），但create的过程一定是在内存中，所以create操作应该在上层进行处理
+```
+create(UserDto user),错误的示范
+
+UserEntity user=userMapper.mapForSave(UserDto user);
+userRepository.save(user);
 ```
 ## 应用层规范
-应用层使用的申明式校验框架（JSR-303）只能用于技术性校验（或国际通用的业务属性，如年龄，性别，Email,URL等校验），即确保程序可以正常执行（检查空值，空串，空集，类型兼容，大小兼容），不会出现NPE（NullPointException），NFE（NumberFormatException）CCE（ClassCastException）等错误
+应用层使用的申明式校验框架（JSR-303）仅限用于技术性校验（包括国际通用的业务属性，如年龄，性别，Email,URL等校验），即确保程序可以正常执行（检查空值，空串，空集，类型兼容，大小兼容），不会出现NPE（NullPointException），NFE（NumberFormatException）CCE（ClassCastException）等错误
 而业务规则性校验，必须完整在业务层代码中实现(提供完整清晰的规则视图)。且业务规则抛出的校验异常（类型，参数异常，规则异常）必须明确包含业务错误信息.
 ```
 @Max("5")
@@ -90,7 +99,7 @@ void pay(@Valid Order order){//错误的示范，不清楚1-5代表什么，1-5�
 void pay(Order order){
     assertOrderStateValid(Order order);//orderState range in(1-5)...
     ....business rules
-    changeOrderState(order,OrderState.PAY);//check whether can change state.
+    changeOrderState(order,OrderState.PAYED);//check whether can change to 'PAYED' state.
 }
 ```
 
