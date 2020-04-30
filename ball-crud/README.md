@@ -47,7 +47,7 @@ interface UserRepository<UserEntity> ...{
 }
 interface DepartmentRepository<DepartmentEntity>  ...{
     //查询给定部门下所有用户，建议的姿势
-    Page<UserEntity> findUserById(Long deptId);
+    Page<UserEntity> findUsersById(Long deptId);
 }
 ```
 ## 持久层方法命名规范
@@ -74,7 +74,8 @@ updatePassword
 ```
 updatePasswordByUsername，不建议
 updatePassword(Long id)，建议
-特例，如果明确在表中定义了唯一约束，则允许基于唯一约束进行更新，此时方法签名中必须明确包含更新条件
+特例，如果明确在表中定义了唯一约束，则允许基于唯一约束进行更新，此时方法签名中必须明确包含更新条件，严禁没有唯一约束而由程序
+控制唯一性检查（select exists=false->save），必定会产生脏数据
 updatePasswordByEmail(String email),//UNIQUE INDEX EMAIL.
 ```
 禁止持久层使用create作为前缀（其可能包含create&save的过程），但create的过程一定是在内存中，所以create操作应该在上层进行处理
@@ -85,7 +86,7 @@ UserEntity user=userMapper.mapForSave(UserDto user);
 userRepository.save(user);
 ```
 ## 应用层规范
-应用层使用的申明式校验框架（JSR-303）仅限用于技术性校验（包括国际通用的业务属性，如年龄，性别，Email,URL等校验），即确保程序可以正常执行（检查空值，空串，空集，类型兼容，大小兼容），不会出现NPE（NullPointException），NFE（NumberFormatException）CCE（ClassCastException）等错误
+应用层使用的申明式校验框架（JSR-303）建议仅用于技术性校验（包括国际通用的业务属性，如年龄，性别，Email,URL等校验），即确保程序可以正常执行（检查空值，空串，空集，类型兼容，大小兼容），不会出现NPE（NullPointException），NFE（NumberFormatException）CCE（ClassCastException）等错误
 而业务规则性校验，必须完整在业务层代码中实现(提供完整清晰的规则视图)。且业务规则抛出的校验异常（类型，参数异常，规则异常）必须明确包含业务错误信息.
 ```
 @Max("5")
@@ -102,6 +103,8 @@ void pay(Order order){
     changeOrderState(order,OrderState.PAYED);//check whether can change to 'PAYED' state.
 }
 ```
+## WEB 规范
+json序列化必须按照snack_case命名，必须提供全局设置，不允许应用使用@JsonProperty等覆盖改规则（枚举，）
 
     
 
