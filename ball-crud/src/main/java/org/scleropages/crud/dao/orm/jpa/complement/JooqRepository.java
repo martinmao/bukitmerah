@@ -216,7 +216,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @return
      */
     default Page<? extends Record> dslPage(Supplier<SelectQuery> select, Pageable pageable, boolean useCountWrapped, boolean applySort) {
-        SelectQuery<Record> countQuery = dslContext().selectFrom(select.get().getSQL()).getQuery();//create query for count.
+        SelectQuery<Record> countQuery = dslContext().selectQuery(select.get().asTable());//create query for count.
         dslPageable(select, pageable, applySort);//apply spring data pageable to source query.
         return dslPage(select.get().fetch(), pageable, () -> countQuery, useCountWrapped);
     }
