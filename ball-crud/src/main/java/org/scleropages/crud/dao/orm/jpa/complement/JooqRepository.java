@@ -235,7 +235,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
         String countSql = selectQuery.getSQL();//sql for count query.
         List<Object> bindValues = selectQuery.getBindValues();//bind values for count query.
         dslPageable(select, pageable, applySort);//apply spring data pageable to source query.
-        return dslPage(select.get().fetch(), pageable, countSql, bindValues);
+        return dslPage(select.get().fetch(), pageable, select, useCountWrapped);
     }
 
 
