@@ -207,6 +207,21 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
 
 
     /**
+     * Create spring data {@link Page} by given content(any query result).
+     *
+     * @param content
+     * @param pageable
+     * @param countSql
+     * @param countSqlBindValues
+     * @param <E>
+     * @return
+     */
+    default <E> Page<E> dslPage(List<E> content, Pageable pageable, String countSql, List<Object> countSqlBindValues) {
+        return PageableExecutionUtils.getPage(content, pageable, () -> dslCountQuery(countSql, countSqlBindValues));
+    }
+
+
+    /**
      * Create spring data {@link Page} from query result by given select.
      *
      * @param select
@@ -216,9 +231,11 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @return
      */
     default Page<? extends Record> dslPage(Supplier<SelectQuery> select, Pageable pageable, boolean useCountWrapped, boolean applySort) {
-        SelectQuery<Record> countQuery = dslContext().selectQuery(select.get().asTable());//create query for count.
+        SelectQuery<Record> selectQuery = select.get();
+        String countSql = selectQuery.getSQL();//sql for count query.
+        List<Object> bindValues = selectQuery.getBindValues();//bind values for count query.
         dslPageable(select, pageable, applySort);//apply spring data pageable to source query.
-        return dslPage(select.get().fetch(), pageable, () -> countQuery, useCountWrapped);
+        return dslPage(select.get().fetch(), pageable, countSql, bindValues);
     }
 
 
@@ -252,7 +269,19 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
         SelectQuery query = select.get();
         if (useCountWrapped)
             return Long.valueOf(dslContext().select(DSL.count()).from(query.asTable()).fetchOne().value1());
-        String sql = query.getSQL().toLowerCase();
+        return dslCountQuery(query.getSQL(), query.getBindValues());
+    }
+
+    /**
+     * query number of count results by given sql.
+     *
+     * @param sql
+     * @param bindValues
+     * @return
+     */
+    default Long dslCountQuery(String sql, List<Object> bindValues) {
+        Assert.hasText(sql, "sql must not be empty for count query.");
+        sql = sql.toLowerCase();
         String[] splitByFirstFrom = org.springframework.util.StringUtils.split(sql, "from");
         Assert.notNull(splitByFirstFrom, "invalid sql. can not split by 'from' fragment. ");
         sql = " from " + splitByFirstFrom[1];
@@ -261,7 +290,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
                 StringUtils.replace(splitByFirstFrom[0], "select", "select count(") + ")" :
                 "select count(*)";
         sql = countFragment + sql;
-        return Long.valueOf(dslContext().fetchOne(sql, query.getBindValues()).get(0).toString());
+        return Long.valueOf(dslContext().fetchOne(sql, bindValues).get(0).toString());
     }
 
 
