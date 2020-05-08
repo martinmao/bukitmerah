@@ -36,7 +36,7 @@ public class ExceptionTranslationInterceptor implements MethodInterceptor, Initi
 
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         if (null == exceptionTranslators)
             exceptionTranslators = Lists.newArrayList();
         exceptionTranslators.add(new BizExceptionTranslator());
