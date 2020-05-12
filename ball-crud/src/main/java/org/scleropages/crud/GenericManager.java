@@ -16,8 +16,6 @@
 package org.scleropages.crud;
 
 import org.scleropages.crud.exception.BizViolationException;
-import org.scleropages.crud.dao.orm.ModelMapper;
-import org.scleropages.crud.dao.orm.ModelMapperRepository;
 import org.scleropages.crud.types.Available;
 
 import javax.validation.Valid;
@@ -52,8 +50,8 @@ public interface GenericManager<M, ID, MP> {
      * @param <T>
      * @return
      */
-    default <T> T getModelMapperByGenericManagerType(Class<GenericManager> clazz) {
-        return (T) ModelMapperRepository.getRequiredModelMapper(clazz);
+    default <T> T getModelMapperByGenericManagerType(Class<GenericManager> genericManagerClass) {
+        return (T) ModelMapperRepository.getRequiredModelMapper(genericManagerClass);
     }
 
     /**
@@ -63,8 +61,8 @@ public interface GenericManager<M, ID, MP> {
      * @param <T>
      * @return
      */
-    default <T> T getModelMapperByType(Class<T> clazz) {
-        return (T) ModelMapperRepository.getRequiredModelMapper(clazz);
+    default <T> T getModelMapper(Class<T> modelMapperClass) {
+        return (T) ModelMapperRepository.getRequiredModelMapper(modelMapperClass);
     }
 
     /**
@@ -75,7 +73,7 @@ public interface GenericManager<M, ID, MP> {
      * @param enableOrDisable true make to enable or false make to disable.
      */
     default void enableOrDisableById(ID id, boolean enableOrDisable) {
-        M model = findById(id);
+        M model = getById(id);
         if (model instanceof Available) {
             Available available = (Available) model;
             if (available.isAvailable() && !enableOrDisable) {
@@ -95,7 +93,6 @@ public interface GenericManager<M, ID, MP> {
 
     void save(@Valid M model);
 
-    M findById(ID id);
-
+    M getById(ID id);
 
 }

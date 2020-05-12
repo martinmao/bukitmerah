@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.scleropages.crud.dao.orm;
+package org.scleropages.crud;
 
 import org.mapstruct.MapperConfig;
 import org.mapstruct.Mapping;

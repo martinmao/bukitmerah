@@ -29,6 +29,7 @@
 
 package org.scleropages.crud.types;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.Transient;
@@ -40,13 +41,16 @@ public interface Available {
 
     @Transient
     @JsonIgnore
+    @JSONField(serialize=false)
     void enable();
 
     @Transient
     @JsonIgnore
+    @JSONField(serialize=false)
     void disable();
 
     @Transient
     @JsonIgnore
+    @JSONField(serialize=false)
     boolean isAvailable();
 }

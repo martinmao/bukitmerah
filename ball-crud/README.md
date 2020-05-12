@@ -61,7 +61,7 @@ exists，返回一个Boolean，意义上表明是否存在
 count，返回一个计数统计结果
 sum，返回一个计数汇总统计结果
 ```
-检索条件使用By作为统一的介词，后面跟条件属性：如
+条件使用By作为统一的介词，后面跟条件属性：如
 ```
 findByEmail
 ```
@@ -75,7 +75,7 @@ updatePassword
 updatePasswordByUsername，不建议
 updatePassword(Long id)，建议
 特例，如果明确在表中定义了唯一约束，则允许基于唯一约束进行更新，此时方法签名中必须明确包含更新条件，严禁没有唯一约束而由程序
-控制唯一性检查（select exists=false->save），必定会产生脏数据
+控制唯一性检查（select exists==false->save），会产生脏数据
 updatePasswordByEmail(String email),//UNIQUE INDEX EMAIL.
 ```
 禁止持久层使用create作为前缀（其可能包含create&save的过程），但create的过程一定是在内存中，所以create操作应该在上层进行处理

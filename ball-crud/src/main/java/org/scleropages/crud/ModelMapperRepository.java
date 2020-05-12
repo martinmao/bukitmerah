@@ -13,14 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.scleropages.crud.dao.orm;
+package org.scleropages.crud;
 
 import com.google.common.collect.Maps;
 import org.mapstruct.factory.Mappers;
 import org.scleropages.core.util.GenericTypes;
-import org.scleropages.crud.FrameworkContext;
-import org.scleropages.crud.GenericManager;
-import org.scleropages.crud.dao.orm.jpa.GenericRepository;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -28,7 +25,7 @@ import java.util.Map;
 
 /**
  * Utility class used for lookup associated {@link ModelMapper} by given class type.<br>
- * The class type can be actual {@link ModelMapper} sub classes or {@link GenericManager} (lookup by generic-type argument[2]) or {@link GenericRepository} (lookup by generic-type argument[1]).
+ * The class type can be actual {@link ModelMapper} sub classes or {@link GenericManager} (lookup by generic-type argument[2]).
  *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
@@ -49,10 +46,10 @@ public abstract class ModelMapperRepository {
             } else if (ClassUtils.isAssignable(GenericManager.class, clazz)) {
                 Class actualMapperType = GenericTypes.getClassGenericType(clazz, GenericManager.class, 2);
                 return lookup(actualMapperType, clazz);
-            } else if (ClassUtils.isAssignable(GenericRepository.class, clazz)) {
+            }/* else if (ClassUtils.isAssignable(GenericRepository.class, clazz)) {
                 Class actualMapperType = GenericTypes.getClassGenericType(clazz, GenericRepository.class, 1);
                 return lookup(actualMapperType, clazz);
-            }
+            }*/
             throw new IllegalStateException("not supported parameter type: " + clazz);
         });
     }

@@ -84,7 +84,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @param sourceRecord
      * @param targetEntity
      */
-    default void dslRecordInto(Record sourceRecord, Object targetEntity) {
+    default <X> X dslRecordInto(Record sourceRecord, X targetEntity) {
 
         Assert.notNull(sourceRecord, "sourceRecord must not be null.");
         Assert.notNull(targetEntity, "targetEntity must not be null.");
@@ -120,6 +120,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
                 dslMapAssociatedAttribute(targetEntity, field, fieldName, fieldValue, associatedAttribute);
             }
         });
+        return targetEntity;
     }
 
     /**
