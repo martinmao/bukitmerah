@@ -118,7 +118,7 @@ public class BizException extends NestedRuntimeException {
      *
      * @param bizProperties
      */
-    protected void setConstraintViolations(String[] constraintViolations) {
+    public void setConstraintViolations(String[] constraintViolations) {
         this.constraintViolations = constraintViolations;
     }
 

@@ -23,7 +23,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 
 /**
- * pointcut 仅限作用于 标注 @{@link Service}注解上
+ * {@link BizExceptionTranslationInterceptor} 切面定义，为避免 {@link BizError}滥用， pointcut 仅限作用于 标注 @{@link Service}注解上
  *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */

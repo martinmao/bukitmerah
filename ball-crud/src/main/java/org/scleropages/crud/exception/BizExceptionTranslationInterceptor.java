@@ -210,10 +210,12 @@ public class BizExceptionTranslationInterceptor implements MethodInterceptor, In
 
     @Override
     public final Object invoke(MethodInvocation invocation) throws Throwable {
-        Integer ticket = joinTranslationState();
+        boolean error = false;
         try {
             return invocation.proceed();
         } catch (Exception e) {
+            Integer ticket = joinTranslationState();
+            error = true;
             if (isTranslationStateChanged(ticket)) {
                 if (logger.isDebugEnabled())
                     logger.debug("[{}]: biz-exception translation state was changed. ignore to translate.", invocation.getMethod());
@@ -233,13 +235,14 @@ public class BizExceptionTranslationInterceptor implements MethodInterceptor, In
             throw throwable;
 
         } finally {
-            leaveTranslationState();
+            if (error)
+                leaveTranslationState();
         }
     }
 
     protected Exception translationException(final MethodInvocation invocation, final Exception e) {
         if (logger.isDebugEnabled()) {
-            logger.debug("detected exception was occurred from: [{}] with error: [{}]:{} . performing biz-exception translating.....", invocation.getMethod(), e.getClass().getSimpleName(),e.getMessage());
+            logger.debug("detected exception was occurred from: [{}] with error: [{}]:{} . performing biz-exception translating.....", invocation.getMethod(), e.getClass().getSimpleName(), e.getMessage());
         }
         Exception translating = e;
         BizExceptionTranslator translator = null;

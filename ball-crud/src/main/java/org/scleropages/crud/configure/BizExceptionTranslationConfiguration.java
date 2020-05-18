@@ -16,6 +16,7 @@
 package org.scleropages.crud.configure;
 
 import org.hibernate.engine.spi.SessionImplementor;
+import org.scleropages.core.mapper.JsonMapper2;
 import org.scleropages.crud.exception.BizException;
 import org.scleropages.crud.exception.BizExceptionHttpView;
 import org.scleropages.crud.exception.BizExceptionTranslationInterceptor;
@@ -66,6 +67,7 @@ public class BizExceptionTranslationConfiguration implements WebMvcConfigurer {
         resolvers.add((request, response, handler, ex) -> {
             if (ex instanceof BizException) {
                 BizException bizException = (BizException) ex;
+                logWarning(bizException);
                 BizExceptionHttpView exceptionView = new BizExceptionHttpView(bizException, response);
                 exceptionView.render(null, httpMessageConverter);
                 if (bizExceptionStackTracingEnabled) {
@@ -77,14 +79,31 @@ public class BizExceptionTranslationConfiguration implements WebMvcConfigurer {
         });
     }
 
+
+    protected void logWarning(BizException ex) {
+        Object[] arguments = ex.getInvocationArguments();
+        logger.warn("{}: [{}]. from: [{}] with arguments: {}", ex.getCode(),
+                ex.getMessage(), ex.getInvocationMethod().toGenericString(), JsonMapper2.toJson(arguments));
+    }
+
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
-        converters.forEach(httpMessageConverter -> {
+        for (int i = 0; i < converters.size(); i++) {
+            HttpMessageConverter<?> httpMessageConverter = converters.get(i);
             if (httpMessageConverter.getSupportedMediaTypes().contains(MediaType.valueOf(bizExceptionHttpViewMediaType))) {
                 this.httpMessageConverter = httpMessageConverter;
                 return;
             }
-        });
+        }
+        //spring mvc 存在返回多个相同类型的 http message converter 情况. 例如 MappingJackson2MessageConverter也存在多个实例.
+        //且仅第一个遵循 spring.jackson.xx 的配置。避免后面的被覆盖使得 spring.jackson的配置失效.
+//        converters.forEach(httpMessageConverter -> {
+//            if (httpMessageConverter.getSupportedMediaTypes().contains(MediaType.valueOf(bizExceptionHttpViewMediaType))) {
+//                if (null != this.httpMessageConverter)
+//                    return;
+//                this.httpMessageConverter = httpMessageConverter;
+//            }
+//        });
     }
 
     @Bean

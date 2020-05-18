@@ -25,4 +25,5 @@ public interface BizExceptionTranslator<T extends BizException> {
     T translation(final MethodInvocation invocation, final Exception e);
 
     boolean support(final Exception e);
+
 }

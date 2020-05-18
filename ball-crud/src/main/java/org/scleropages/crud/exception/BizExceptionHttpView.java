@@ -15,7 +15,6 @@
  */
 package org.scleropages.crud.exception;
 
-import org.scleropages.core.mapper.JsonMapper2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -41,10 +40,8 @@ public class BizExceptionHttpView {
     private final int status;
     private final String message;
     private final ServerHttpResponse outputMessage;
-    private final BizException ex;
 
     public BizExceptionHttpView(BizException ex, HttpServletResponse response) {
-        this.ex = ex;
         this.code = ex.getCode();
         this.constraintViolations = ex.getConstraintViolations();
         this.status = computeStatus(ex);
@@ -89,16 +86,8 @@ public class BizExceptionHttpView {
             outputMessage.getHeaders().putAll(responseEntity.getHeaders());
             httpMessageConverter.write(responseEntity.getBody(), null, outputMessage);
             outputMessage.flush();
-            logWarning();
         } catch (IOException e) {
             throw new IllegalStateException("failure to render BizException. caused by: " + e.getMessage(), e);
         }
-    }
-
-
-    protected void logWarning() {
-        Object[] arguments = ex.getInvocationArguments();
-        logger.warn("{}: [{}]. from: [{}] with arguments: {}", ex.getCode(),
-                ex.getMessage(), ex.getInvocationMethod().toGenericString(), JsonMapper2.toJson(arguments));
     }
 }
