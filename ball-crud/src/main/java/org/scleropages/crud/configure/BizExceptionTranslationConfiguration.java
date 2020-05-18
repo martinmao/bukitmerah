@@ -100,7 +100,7 @@ public class BizExceptionTranslationConfiguration implements WebMvcConfigurer {
             try {
                 text = next.getText(e);
             } catch (Exception ex) {
-                logger.warn("failure to resolve biz exception message. caused by: " + ex.getMessage(), ex);
+                logger.warn("unable to resolve biz exception message. caused by: " + ex.getMessage(), ex);
             }
             if (null != text) {
                 message = text;
