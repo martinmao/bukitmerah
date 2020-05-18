@@ -28,6 +28,7 @@ import java.util.StringTokenizer;
  * 4.JDK提供的URLEncoder
  * 
  * @author calvin
+ * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
 public class Encodes {
 

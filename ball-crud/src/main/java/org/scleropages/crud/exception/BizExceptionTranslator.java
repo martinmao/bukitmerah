@@ -20,9 +20,9 @@ import org.aopalliance.intercept.MethodInvocation;
 /**
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
-public interface ExceptionTranslator {
+public interface BizExceptionTranslator<T extends BizException> {
 
-    Exception translation(final MethodInvocation invocation, final Exception e);
+    T translation(final MethodInvocation invocation, final Exception e);
 
     boolean support(final Exception e);
 }

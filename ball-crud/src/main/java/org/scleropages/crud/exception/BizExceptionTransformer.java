@@ -15,20 +15,11 @@
  */
 package org.scleropages.crud.exception;
 
+import java.util.function.Function;
+
 /**
- * 违反业务约束
- *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
-public class BizViolationException extends BizException {
+public interface BizExceptionTransformer extends Function<Throwable, BizException> {
 
-    public static final String CODE = "40002";
-
-    public BizViolationException(String message) {
-        super(CODE, message);
-    }
-
-    public BizViolationException(String message, Throwable cause) {
-        super(CODE, message, cause);
-    }
 }

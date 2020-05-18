@@ -29,6 +29,7 @@ import java.util.TreeMap;
  * Http与Servlet工具类.
  * 
  * @author calvin
+ * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
 public class Servlets {
 
@@ -290,7 +291,7 @@ public class Servlets {
 	 * 
 	 * @param request
 	 */
-	public static final void exludeSiteMesh(HttpServletRequest request) {
+	public static final void excludeSiteMesh(HttpServletRequest request) {
 		request.setAttribute("com.opensymphony.sitemesh.APPLIED_ONCE", true);
 	}
 }

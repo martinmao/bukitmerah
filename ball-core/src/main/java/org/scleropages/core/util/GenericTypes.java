@@ -30,17 +30,25 @@ public abstract class GenericTypes {
 
 
     public static final Class getClassGenericType(Class clazz, Class interfaceClass, int... index) {
+        return getClassGenericType(true, clazz, interfaceClass, index);
+    }
 
+    public static final Class getClassGenericType(boolean catchable, Class clazz, Class interfaceClass, int... index) {
+        if (!catchable) {
+            if (null == interfaceClass) {
+                return ResolvableType.forClass(clazz).resolveGeneric(index);
+            } else {
+                return ResolvableType.forClass(interfaceClass, clazz).resolveGeneric(index);
+            }
+        }
         String computeKey = computeKey(clazz, index);
-
-        Class genericType = cachedClassGenericTypes.computeIfAbsent(computeKey, key -> {
+        return cachedClassGenericTypes.computeIfAbsent(computeKey, key -> {
             if (null == interfaceClass) {
                 return ResolvableType.forClass(clazz).resolveGeneric(index);
             } else {
                 return ResolvableType.forClass(interfaceClass, clazz).resolveGeneric(index);
             }
         });
-        return genericType;
     }
 
     private static final String computeKey(Class clazz, int... indexes) {

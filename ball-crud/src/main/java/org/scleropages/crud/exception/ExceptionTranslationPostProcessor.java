@@ -23,12 +23,14 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 
 /**
+ * pointcut 仅限作用于 标注 @{@link Service}注解上
+ *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
 public class ExceptionTranslationPostProcessor extends AbstractBeanFactoryAwareAdvisingPostProcessor implements InitializingBean {
 
 
-    private ExceptionTranslationInterceptor exceptionTranslationInterceptor;
+    private BizExceptionTranslationInterceptor exceptionTranslationInterceptor;
 
     @Override
     public void afterPropertiesSet() {
@@ -36,7 +38,7 @@ public class ExceptionTranslationPostProcessor extends AbstractBeanFactoryAwareA
         this.advisor = new DefaultPointcutAdvisor(pointcut, exceptionTranslationInterceptor);
     }
 
-    public void setExceptionTranslationInterceptor(ExceptionTranslationInterceptor exceptionTranslationInterceptor) {
+    public void setExceptionTranslationInterceptor(BizExceptionTranslationInterceptor exceptionTranslationInterceptor) {
         this.exceptionTranslationInterceptor = exceptionTranslationInterceptor;
     }
 }

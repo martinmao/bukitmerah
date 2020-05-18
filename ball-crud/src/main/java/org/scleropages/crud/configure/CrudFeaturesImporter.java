@@ -53,7 +53,7 @@ import java.util.Optional;
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
 @Configuration
-@Import({BizExceptionTranslationConfiguration.class, DataSourceRoutingConfiguration.class})
+@Import({BizExceptionTranslationConfiguration.class, DataSourceRoutingConfiguration.class, GenericLoggingConfiguration.class})
 public class CrudFeaturesImporter implements ApplicationListener<ContextRefreshedEvent> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());

@@ -15,7 +15,7 @@
  */
 package org.scleropages.crud;
 
-import org.scleropages.crud.exception.BizViolationException;
+import org.scleropages.crud.exception.BizStateViolationException;
 import org.scleropages.crud.types.Available;
 
 import javax.validation.Valid;
@@ -86,7 +86,7 @@ public interface GenericManager<M, ID, MP> {
                 return;
             }
         } else {
-            throw new BizViolationException("not support operation for: " + getClass().getName() + "#enableOrDisableById for id: " + id);
+            throw new BizStateViolationException("not support operation for: " + getClass().getName() + "#enableOrDisableById for id: " + id);
         }
     }
 

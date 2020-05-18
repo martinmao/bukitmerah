@@ -16,33 +16,31 @@
 package org.scleropages.crud.exception;
 
 /**
- * 业务参数错误异常，例如无效的订单类型(except 1-5 but 6).
+ * 违反业务约束，例如不能将订单待支付状态直接变为已发货状态
  *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
-public class BizParamViolationException extends BizException {
-
+public class BizStateViolationException extends BizException {
 
     public static final String CODE = CODE_AUTO_DETECT;
 
-
-    public BizParamViolationException(String message) {
+    public BizStateViolationException(String message) {
         super(CODE, message);
     }
 
-    public BizParamViolationException(Throwable cause) {
+    public BizStateViolationException(Throwable cause) {
         super(CODE, cause.getMessage(), cause);
     }
 
-    public BizParamViolationException(String message, Throwable cause) {
+    public BizStateViolationException(String message, Throwable cause) {
         super(CODE, message, cause);
     }
 
-    public BizParamViolationException(String code, String message) {
+    public BizStateViolationException(String code, String message) {
         super(code, message);
     }
 
-    public BizParamViolationException(String code, String message, Throwable cause) {
+    public BizStateViolationException(String code, String message, Throwable cause) {
         super(code, message, cause);
     }
 
@@ -50,5 +48,4 @@ public class BizParamViolationException extends BizException {
     public final boolean isCodeAutoDetect() {
         return true;
     }
-
 }
