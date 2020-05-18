@@ -41,11 +41,11 @@ public class BizExceptionHttpView {
     private final String message;
     private final ServerHttpResponse outputMessage;
 
-    public BizExceptionHttpView(BizException ex, HttpServletResponse response) {
+    public BizExceptionHttpView(BizException ex, HttpServletResponse response, String message) {
         this.code = ex.getCode();
         this.constraintViolations = ex.getConstraintViolations();
         this.status = computeStatus(ex);
-        this.message = ex.getMessage();
+        this.message = null != message ? message : ex.getMessage();
         this.outputMessage = new ServletServerHttpResponse(response);
     }
 

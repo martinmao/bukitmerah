@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.scleropages.core.mapper.JsonMapper2;
 import org.scleropages.crud.exception.BizException;
 import org.scleropages.crud.exception.BizExceptionHttpView;
+import org.scleropages.crud.exception.BizExceptionMessageRepository;
 import org.scleropages.crud.exception.BizExceptionTranslationInterceptor;
 import org.scleropages.crud.exception.BizExceptionTranslator;
 import org.scleropages.crud.exception.DataIntegrityViolationExceptionTranslator;
@@ -44,6 +45,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import javax.persistence.EntityManager;
 import javax.sql.DataSource;
 import javax.validation.executable.ExecutableValidator;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -62,13 +64,23 @@ public class BizExceptionTranslationConfiguration implements WebMvcConfigurer {
 
     private HttpMessageConverter httpMessageConverter;
 
+    private ObjectProvider<BizExceptionMessageRepository> messageRepositories;
+
+    private boolean translatingMessage;
+
+
+    public BizExceptionTranslationConfiguration(ObjectProvider<BizExceptionMessageRepository> bizExceptionMessageRepositories) {
+        this.messageRepositories = bizExceptionMessageRepositories;
+        translatingMessage = this.messageRepositories.iterator().hasNext();
+    }
+
     @Override
     public void extendHandlerExceptionResolvers(List<HandlerExceptionResolver> resolvers) {
         resolvers.add((request, response, handler, ex) -> {
             if (ex instanceof BizException) {
                 BizException bizException = (BizException) ex;
                 logWarning(bizException);
-                BizExceptionHttpView exceptionView = new BizExceptionHttpView(bizException, response);
+                BizExceptionHttpView exceptionView = new BizExceptionHttpView(bizException, response, translatingMessage ? resolveBizExceptionMessage(bizException) : null);
                 exceptionView.render(null, httpMessageConverter);
                 if (bizExceptionStackTracingEnabled) {
                     logger.error(ex.getMessage(), ex);
@@ -77,6 +89,25 @@ public class BizExceptionTranslationConfiguration implements WebMvcConfigurer {
             }
             return null;//return null means no errors handled.
         });
+    }
+
+    protected String resolveBizExceptionMessage(BizException e) {
+        String message = e.getMessage();
+        Iterator<BizExceptionMessageRepository> iterator = messageRepositories.iterator();
+        for (; iterator.hasNext(); ) {
+            BizExceptionMessageRepository next = iterator.next();
+            String text = null;
+            try {
+                text = next.getText(e);
+            } catch (Exception ex) {
+                logger.warn("failure to resolve biz exception message. caused by: " + ex.getMessage(), ex);
+            }
+            if (null != text) {
+                message = text;
+                break;
+            }
+        }
+        return message;
     }
 
 
