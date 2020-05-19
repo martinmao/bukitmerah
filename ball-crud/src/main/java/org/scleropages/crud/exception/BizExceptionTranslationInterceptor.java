@@ -28,6 +28,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.NamedThreadLocal;
 import org.springframework.core.annotation.AnnotationUtils;
 
 import java.lang.reflect.Method;
@@ -47,39 +48,65 @@ public class BizExceptionTranslationInterceptor implements MethodInterceptor, In
      * Never using {@link java.lang.Integer.IntegerCache} (by default between -128 and 127 (inclusive)) or VM arguments -XX:AutoBoxCacheMax=<size>.
      * this may cause {@link #isTranslationStateChanged(Integer)} result not expected.
      */
-    private static final int TRANSLATION_STATE_START = 128;
+//    private static final int TRANSLATION_STATE_START = 128;
 
     protected static final Logger logger = LoggerFactory.getLogger(BizExceptionTranslationInterceptor.class);
 
     @Value("#{ @environment['application.biz-exception.code-prefix'] ?: N/A }")
     private String applicationBizExceptionCodePrefix;
 
-    private static final ThreadLocal<Integer> translationState = new ThreadLocal<>();
+//    private static final ThreadLocal<Integer> translationState = new ThreadLocal<>();
+
+    private static final NamedThreadLocal<Method> bizInvocationEntryState = new NamedThreadLocal<>("bizExceptionEntryState");//调用栈入口
+
+    private static final NamedThreadLocal<Method> bizExceptionErrorState = new NamedThreadLocal<>("bizExceptionErrorState");//异常抛出点
 
     private BizExceptionTranslator finalBizExceptionTranslator = new FinalBizExceptionTranslator();
 
     private ApplicationContext applicationContext;
 
 
-    private final static Integer joinTranslationState() {
-        Integer state = translationState.get();
-        state = null != state && state >= TRANSLATION_STATE_START ? state + 1 : TRANSLATION_STATE_START;
-        translationState.set(state);
-        return state;
+    private final static void joinInvocationState(MethodInvocation invocation) {
+        if (null == bizInvocationEntryState.get())
+            bizInvocationEntryState.set(invocation.getMethod());
     }
 
-    private final static void leaveTranslationState() {
-        Integer state = translationState.get();
-        if (Objects.equals(state, TRANSLATION_STATE_START)) {
-            translationState.remove();
-            return;
+    private final static void leaveInvocationState(MethodInvocation invocation) {
+        if (Objects.equals(bizInvocationEntryState.get(), invocation.getMethod())) {
+            bizInvocationEntryState.set(null);
+            bizExceptionErrorState.set(null);
         }
-        translationState.set(state - 1);
     }
 
-    protected final static boolean isTranslationStateChanged(Integer ticket) {
-        return translationState.get() != ticket;
+    private final static boolean reportBizException(MethodInvocation invocation) {
+        Method associatedError = bizExceptionErrorState.get();
+        boolean reportResult = null == associatedError;
+        if (reportResult) {
+            bizExceptionErrorState.set(invocation.getMethod());
+        }
+        return reportResult;
     }
+
+
+//    private final static Integer joinTranslationState() {
+//        Integer state = translationState.get();
+//        state = null != state && state >= TRANSLATION_STATE_START ? state + 1 : TRANSLATION_STATE_START;
+//        translationState.set(state);
+//        return state;
+//    }
+//
+//    private final static void leaveTranslationState() {
+//        Integer state = translationState.get();
+//        if (Objects.equals(state, TRANSLATION_STATE_START)) {
+//            translationState.remove();
+//            return;
+//        }
+//        translationState.set(state - 1);
+//    }
+//
+//    protected final static boolean isTranslationStateChanged(Integer ticket) {
+//        return translationState.get() != ticket;
+//    }
 
 
     private List<BizExceptionTranslator> exceptionTranslators;
@@ -210,16 +237,17 @@ public class BizExceptionTranslationInterceptor implements MethodInterceptor, In
 
     @Override
     public final Object invoke(MethodInvocation invocation) throws Throwable {
-        boolean error = false;
+//        Integer ticket = joinTranslationState();
+        joinInvocationState(invocation);
         try {
             return invocation.proceed();
         } catch (Exception e) {
-            Integer ticket = joinTranslationState();
-            error = true;
-            if (isTranslationStateChanged(ticket)) {
+//            if (isTranslationStateChanged(ticket)) {
+            if (!reportBizException(invocation)) {
                 if (logger.isDebugEnabled())
-                    logger.debug("[{}]: biz-exception translation state was changed. ignore to translate.", invocation.getMethod());
+                    logger.debug("[{}]: biz-exception translation state was changed. ignore to translating.", invocation.getMethod());
                 throw e;
+//            }
             }
             Exception throwable;
             try {
@@ -235,8 +263,8 @@ public class BizExceptionTranslationInterceptor implements MethodInterceptor, In
             throw throwable;
 
         } finally {
-            if (error)
-                leaveTranslationState();
+            leaveInvocationState(invocation);
+//            leaveTranslationState();
         }
     }
 
