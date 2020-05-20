@@ -4,21 +4,21 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.scleropages.ball</groupId>
-    <artifactId>ball-root</artifactId>
+    <groupId>org.scleropages</groupId>
+    <artifactId>bukitmerah-root</artifactId>
     <packaging>pom</packaging>
     <version>0.0.1-SNAPSHOT</version>
 
 
     <modules>
-        <module>ball-core</module>
-        <module>ball-crud</module>
-        <module>ball-serialize</module>
-        <module>ball-middleware-connector</module>
-        <module>ball-all</module>
+        <module>bukitmerah-core</module>
+        <module>bukitmerah-crud</module>
+        <module>bukitmerah-serialize</module>
+        <module>bukitmerah-middleware-connector</module>
+        <module>bukitmerah-all</module>
     </modules>
 
-    <name>Ball-${project.version} Parent</name>
+    <name>Bukit Merah-${project.version} Parent</name>
     <description>Top project pom.xml file</description>
 
     <properties>
