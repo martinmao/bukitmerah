@@ -25,9 +25,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.scleropages.core.mapper.JsonMapper2;
 import org.scleropages.crud.FrameworkContext;
+import org.scleropages.crud.dao.orm.jpa.hibernate.GenericHibernateCustomizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jackson.JacksonProperties;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.interceptor.CacheOperationInvocationContext;
@@ -130,5 +132,11 @@ public class CrudFeaturesImporter implements ApplicationListener<ContextRefreshe
                 logger.trace("Applying print pretty: {}", serializationFeatureBooleanMap.getOrDefault(SerializationFeature.INDENT_OUTPUT, false));
         });
         JsonMapper2.applyFeatureConfig(parserFeatures, generateFeatures);
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "hibernate.generic_interceptor_enabled", matchIfMissing = true)
+    public GenericHibernateCustomizer genericHibernateCustomizer(){
+        return new GenericHibernateCustomizer();
     }
 }

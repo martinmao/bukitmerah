@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.scleropages.crud.dao.orm.jpa;
+package org.scleropages.crud.dao.orm.jpa.hibernate;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -23,6 +23,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.HibernateProxyHelper;
+import org.scleropages.crud.dao.orm.jpa.JpaContexts;
 import org.springframework.core.ResolvableType;
 import org.springframework.util.ClassUtils;
 

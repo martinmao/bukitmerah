@@ -52,5 +52,5 @@ public interface Available {
     @Transient
     @JsonIgnore
     @JSONField(serialize=false)
-    boolean isAvailable();
+    boolean availableState();
 }

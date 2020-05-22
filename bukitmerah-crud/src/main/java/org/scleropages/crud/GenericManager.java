@@ -65,34 +65,4 @@ public interface GenericManager<M, ID, MP> {
         return (T) ModelMapperRepository.getRequiredModelMapper(modelMapperClass);
     }
 
-    /**
-     * enable or disable a model available state by id.
-     * id associated model must implements {@link Available}.
-     *
-     * @param id
-     * @param enableOrDisable true make to enable or false make to disable.
-     */
-    default void enableOrDisableById(ID id, boolean enableOrDisable) {
-        M model = getById(id);
-        if (model instanceof Available) {
-            Available available = (Available) model;
-            if (available.isAvailable() && !enableOrDisable) {
-                available.disable();
-                save(model);
-                return;
-            } else if (!available.isAvailable() && enableOrDisable) {
-                available.enable();
-                save(model);
-                return;
-            }
-        } else {
-            throw new BizStateViolationException("not support operation for: " + getClass().getName() + "#enableOrDisableById for id: " + id);
-        }
-    }
-
-
-    void save(@Valid M model);
-
-    M getById(ID id);
-
 }
