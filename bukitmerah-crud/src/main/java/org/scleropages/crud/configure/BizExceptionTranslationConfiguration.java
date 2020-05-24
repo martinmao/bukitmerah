@@ -25,6 +25,7 @@ import org.scleropages.crud.exception.BizExceptionTranslator;
 import org.scleropages.crud.exception.DataIntegrityViolationExceptionTranslator;
 import org.scleropages.crud.exception.ExceptionTranslationPostProcessor;
 import org.scleropages.crud.exception.Jsr303ConstraintViolationTranslator;
+import org.scleropages.crud.exception.NoSuchElementConstraintViolationTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -158,13 +159,21 @@ public class BizExceptionTranslationConfiguration implements WebMvcConfigurer {
     @Bean
     @ConditionalOnClass(ExecutableValidator.class)
     @ConditionalOnResource(resources = "classpath:META-INF/services/javax.validation.spi.ValidationProvider")
+    @ConditionalOnMissingBean
     public Jsr303ConstraintViolationTranslator jsr303ConstraintViolationTranslator() {
         return new Jsr303ConstraintViolationTranslator();
     }
 
     @Bean
     @ConditionalOnClass({LocalContainerEntityManagerFactoryBean.class, EntityManager.class, SessionImplementor.class})
+    @ConditionalOnMissingBean
     public DataIntegrityViolationExceptionTranslator dataIntegrityViolationExceptionTranslator(ObjectProvider<DataSource> dataSource) {
         return new DataIntegrityViolationExceptionTranslator(dataSource.getIfAvailable());
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public NoSuchElementConstraintViolationTranslator noSuchElementConstraintViolationTranslator(){
+        return new NoSuchElementConstraintViolationTranslator();
     }
 }
