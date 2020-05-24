@@ -128,12 +128,12 @@ public class BizExceptionTranslationInterceptor implements MethodInterceptor, In
 
         private final Class[] bizParamViolationExceptions = new Class[]{
                 IllegalArgumentException.class,
-                BizParamViolationException.class,
+                BizParamViolationException.class
         };
 
         private final Class[] bizViolationExceptions = new Class[]{
                 IllegalStateException.class,
-                BizStateViolationException.class,
+                BizStateViolationException.class
         };
 
         @Override
