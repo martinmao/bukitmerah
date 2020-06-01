@@ -31,6 +31,7 @@ public class Views {
     private static final String XML_TYPE = "text/xml";
     private static final String HTML_TYPE = "text/html";
     private static final String JS_TYPE = "text/javascript";
+    private static final String YAML_TYPE="application/yaml";
 
     /**
      * 直接输出内容的简便函数.
@@ -96,6 +97,16 @@ public class Views {
      */
     public static void renderJson(HttpServletResponse response, final String jsonString, final String... headers) {
         render(response, JSON_TYPE, jsonString, headers);
+    }
+
+    /**
+     * 直接输出YAML
+     * @param response
+     * @param jsonString
+     * @param headers
+     */
+    public static void renderYaml(HttpServletResponse response, final String jsonString, final String... headers){
+        render(response, YAML_TYPE, jsonString, headers);
     }
 
     /**

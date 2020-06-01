@@ -81,7 +81,7 @@ public class BizExceptionTranslationConfiguration implements WebMvcConfigurer {
             if (ex instanceof BizException) {
                 BizException bizException = (BizException) ex;
                 logWarning(bizException);
-                BizExceptionHttpView exceptionView = new BizExceptionHttpView(bizException, response, translatingMessage ? resolveBizExceptionMessage(bizException) : null);
+                BizExceptionHttpView exceptionView = new BizExceptionHttpView(bizException, request, response, translatingMessage ? resolveBizExceptionMessage(bizException) : null);
                 exceptionView.render(null, httpMessageConverter);
                 if (bizExceptionStackTracingEnabled) {
                     logger.error(ex.getMessage(), ex);
@@ -173,7 +173,7 @@ public class BizExceptionTranslationConfiguration implements WebMvcConfigurer {
 
     @Bean
     @ConditionalOnMissingBean
-    public NoSuchElementConstraintViolationTranslator noSuchElementConstraintViolationTranslator(){
+    public NoSuchElementConstraintViolationTranslator noSuchElementConstraintViolationTranslator() {
         return new NoSuchElementConstraintViolationTranslator();
     }
 }

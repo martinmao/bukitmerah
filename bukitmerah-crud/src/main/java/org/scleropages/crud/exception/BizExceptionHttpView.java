@@ -24,28 +24,39 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpResponse;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Date;
 
 /**
+ * 设计格式兼容 {@link org.springframework.boot.web.servlet.error.DefaultErrorAttributes}
+ *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
+ * @see org.springframework.boot.autoconfigure.web.servlet.error.BasicErrorController
  */
 public class BizExceptionHttpView {
 
     private static final Logger logger = LoggerFactory.getLogger(BizExceptionHttpView.class);
 
 
+    private final Date timestamp;
+    private final String path;
     private final String code;
+    private final String error;
     private final String[] constraintViolations;
     private final int status;
     private final String message;
     private final ServerHttpResponse outputMessage;
 
-    public BizExceptionHttpView(BizException ex, HttpServletResponse response, String message) {
+    public BizExceptionHttpView(BizException ex, HttpServletRequest request, HttpServletResponse response, String message) {
         this.code = ex.getCode();
         this.constraintViolations = ex.getConstraintViolations();
         this.status = computeStatus(ex);
         this.message = null != message ? message : ex.getMessage();
+        this.timestamp = new Date();
+        this.path = request.getRequestURI() + request.getQueryString();
+        this.error = ex.getClass().getSimpleName();
         this.outputMessage = new ServletServerHttpResponse(response);
     }
 
@@ -57,6 +68,18 @@ public class BizExceptionHttpView {
             return 300;
         else
             return HttpStatus.INTERNAL_SERVER_ERROR.value();
+    }
+
+    public Date getTimestamp() {
+        return timestamp;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public String getError() {
+        return error;
     }
 
     public String getCode() {
