@@ -55,7 +55,7 @@ public class BizExceptionHttpView {
         this.status = computeStatus(ex);
         this.message = null != message ? message : ex.getMessage();
         this.timestamp = new Date();
-        this.path = request.getRequestURI() + request.getQueryString();
+        this.path = request.getRequestURI();
         this.error = ex.getClass().getSimpleName();
         this.outputMessage = new ServletServerHttpResponse(response);
     }
