@@ -30,7 +30,7 @@ public class GenericHibernateCustomizer implements HibernatePropertiesCustomizer
 
     @Override
     public void customize(Map<String, Object> hibernateProperties) {
-        hibernateProperties.putIfAbsent("hibernate.ejb.interceptor", GenericHibernateInterceptor.class.getName());
-        LOGGER.info("hibernate.ejb.interceptor->[{}]", GenericHibernateInterceptor.class.getName());
+        hibernateProperties.putIfAbsent("hibernate.session_factory.interceptor", GenericHibernateInterceptor.class.getName());
+        LOGGER.info("hibernate.session_factory.interceptor->[{}]", GenericHibernateInterceptor.class.getName());
     }
 }
