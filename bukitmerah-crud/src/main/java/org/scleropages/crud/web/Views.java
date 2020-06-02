@@ -106,7 +106,7 @@ public class Views {
      * @param headers
      */
     public static void renderYaml(HttpServletResponse response, final String jsonString, final String... headers){
-        render(response, YAML_TYPE, jsonString, headers);
+        render(response, TEXT_TYPE, jsonString, headers);
     }
 
     /**
