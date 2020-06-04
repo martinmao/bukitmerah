@@ -17,7 +17,10 @@ package org.scleropages.core.util;
 
 import com.google.common.collect.Maps;
 import org.springframework.core.ResolvableType;
+import org.springframework.util.ReflectionUtils;
 
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.util.Map;
 
 /**
@@ -33,8 +36,8 @@ public abstract class GenericTypes {
         return getClassGenericType(true, clazz, interfaceClass, index);
     }
 
-    public static final Class getClassGenericType(boolean catchable, Class clazz, Class interfaceClass, int... index) {
-        if (!catchable) {
+    public static final Class getClassGenericType(boolean cacheables, Class clazz, Class interfaceClass, int... index) {
+        if (!cacheables) {
             if (null == interfaceClass) {
                 return ResolvableType.forClass(clazz).resolveGeneric(index);
             } else {
@@ -49,6 +52,16 @@ public abstract class GenericTypes {
                 return ResolvableType.forClass(interfaceClass, clazz).resolveGeneric(index);
             }
         });
+    }
+
+    public static final Class getMethodReturnGenericType(Class source, PropertyDescriptor propertyDescriptor, int... index) {
+        Class<?> resolveGeneric = ResolvableType.forMethodReturnType(propertyDescriptor.getReadMethod()).resolveGeneric(index);
+        if (null == resolveGeneric) {
+            Field field = ReflectionUtils.findField(source, propertyDescriptor.getName());
+            if (null != field)
+                resolveGeneric = ResolvableType.forField(field).resolveGeneric(index);
+        }
+        return resolveGeneric;
     }
 
     private static final String computeKey(Class clazz, int... indexes) {
