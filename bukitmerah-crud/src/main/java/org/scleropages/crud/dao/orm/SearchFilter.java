@@ -111,6 +111,9 @@ public class SearchFilter {
 
             Map<String, SearchFilter> filters = Maps.newHashMap();
 
+            if (searchParams == null)
+                return filters;
+
             for (Entry<String, Object> entry : searchParams.entrySet()) {
                 // 过滤掉空值
                 String key = entry.getKey();

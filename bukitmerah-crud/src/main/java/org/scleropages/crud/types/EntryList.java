@@ -28,7 +28,7 @@ import java.util.Map;
  */
 public class EntryList<K, V> {
 
-    private List<Entry<K, V>> entries;
+    private List<Entry<K, V>> items;
 
     public static class Entry<K, V> {
         private K key;
@@ -51,31 +51,31 @@ public class EntryList<K, V> {
         }
     }
 
-    public List<Entry<K, V>> getEntries() {
-        return entries;
+    public List<Entry<K, V>> getItems() {
+        return items;
     }
 
-    public void setEntries(List<Entry<K, V>> entries) {
-        this.entries = entries;
+    public void setItems(List<Entry<K, V>> items) {
+        this.items = items;
     }
 
     public Map<K, V> toMap() {
         Map<K, V> map = Maps.newHashMap();
-        if (null == entries)
+        if (null == items)
             return map;
-        entries.forEach(kvEntry -> map.put(kvEntry.getKey(), kvEntry.getValue()));
+        items.forEach(kvEntry -> map.put(kvEntry.getKey(), kvEntry.getValue()));
         return map;
     }
 
     public EntryList fromMap(Map<K, V> map) {
         if (map == null)
             return this;
-        this.entries = Lists.newArrayList();
+        this.items = Lists.newArrayList();
         map.forEach((k, v) -> {
             Entry<K, V> entry = new Entry<>();
             entry.setKey(entry.getKey());
             entry.setValue(entry.getValue());
-            entries.add(entry);
+            items.add(entry);
         });
         return this;
     }

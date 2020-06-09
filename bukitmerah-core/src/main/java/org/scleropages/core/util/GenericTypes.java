@@ -64,6 +64,9 @@ public abstract class GenericTypes {
         return resolveGeneric;
     }
 
+
+
+
     private static final String computeKey(Class clazz, int... indexes) {
         StringBuilder sb = new StringBuilder(clazz.getName()).append('_');
         for (int index :
