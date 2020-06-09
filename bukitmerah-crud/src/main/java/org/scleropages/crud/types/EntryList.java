@@ -73,8 +73,8 @@ public class EntryList<K, V> {
         this.items = Lists.newArrayList();
         map.forEach((k, v) -> {
             Entry<K, V> entry = new Entry<>();
-            entry.setKey(entry.getKey());
-            entry.setValue(entry.getValue());
+            entry.setKey(k);
+            entry.setValue(v);
             items.add(entry);
         });
         return this;
