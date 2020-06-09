@@ -118,7 +118,10 @@ public abstract class JsonMapper2 {
             }
             return JSON.parseObject(json, clazz[0], DEFAULT_PARSER_FEATURE);
         } catch (Exception e) {
-            logger.warn("parse json string error:" + json, e);
+            if (logger.isDebugEnabled())
+                logger.warn("parse json string error:" + json, e);
+            else
+                logger.warn("parse json string error:" + json);
             return null;
         }
     }
