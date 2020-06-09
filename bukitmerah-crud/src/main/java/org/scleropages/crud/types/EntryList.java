@@ -15,6 +15,7 @@
  */
 package org.scleropages.crud.types;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import java.util.List;
@@ -62,17 +63,20 @@ public class EntryList<K, V> {
         Map<K, V> map = Maps.newHashMap();
         if (null == entries)
             return map;
-        entries.forEach(kvEntry -> {
-            map.put(kvEntry.getKey(), kvEntry.getValue());
-        });
+        entries.forEach(kvEntry -> map.put(kvEntry.getKey(), kvEntry.getValue()));
         return map;
     }
 
-    public void fromMap(Map<K, V> map) {
+    public EntryList fromMap(Map<K, V> map) {
+        if (map == null)
+            return this;
+        this.entries = Lists.newArrayList();
         map.forEach((k, v) -> {
             Entry<K, V> entry = new Entry<>();
             entry.setKey(entry.getKey());
             entry.setValue(entry.getValue());
+            entries.add(entry);
         });
+        return this;
     }
 }
