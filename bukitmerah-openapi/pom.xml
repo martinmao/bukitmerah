@@ -19,6 +19,7 @@
     <properties>
         <swagger.version>2.1.2</swagger.version>
         <swagger-ui.version>3.26.0</swagger-ui.version>
+        <swagger-codegen.version>3.0.20</swagger-codegen.version>
         <jquery.version>3.5.1</jquery.version>
     </properties>
     <dependencyManagement>
@@ -27,6 +28,11 @@
                 <groupId>io.swagger.core.v3</groupId>
                 <artifactId>swagger-core</artifactId>
                 <version>${swagger.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger.codegen.v3</groupId>
+                <artifactId>swagger-codegen</artifactId>
+                <version>${swagger-codegen.version}</version>
             </dependency>
             <!--webjars-->
             <dependency>

@@ -10,7 +10,7 @@
     $(document).ready(function(){
         $.getJSON('../api-docs/list',function(result){
             $.each(result, function(i, item){
-                $('h1').append('<h5 class=""><a href='+item.url+'>'+item.tittle+'</a></h5>');
+                $('h1').append('<h5><a href='+item.url+'>'+item.tittle+'</a></h5>');
             });
         });
     });
