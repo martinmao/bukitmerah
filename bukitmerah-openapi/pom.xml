@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>bukitmerah-root</artifactId>
+        <groupId>org.scleropages.bukitmerah</groupId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>bukitmerah-openapi</artifactId>
+    <packaging>pom</packaging>
+    <modules>
+        <module>bukitmerah-openapi-core</module>
+        <module>bukitmerah-openapi-webjars</module>
+        <module>bukitmerah-openapi-boot-starter</module>
+    </modules>
+    <properties>
+        <swagger.version>2.1.2</swagger.version>
+        <swagger-ui.version>3.26.0</swagger-ui.version>
+        <jquery.version>3.5.1</jquery.version>
+    </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-core</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+            <!--webjars-->
+            <dependency>
+                <groupId>org.webjars.npm</groupId>
+                <artifactId>swagger-ui-dist</artifactId>
+                <version>${swagger-ui.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.webjars</groupId>
+                <artifactId>jquery</artifactId>
+                <version>${jquery.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>

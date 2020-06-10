@@ -1,0 +1,89 @@
+{
+  "groups": [
+    {
+      "name": "openapi"
+    }
+  ],
+  "properties": [
+    {
+      "name": "openapi.base-packages",
+      "type": "java.lang.String",
+      "description": "base packages to scanning."
+    },
+    {
+      "name": "openapi.gateway",
+      "type": "java.lang.String",
+      "description": "base packages to scanning."
+    },
+    {
+      "name": "openapi.build-on-startup",
+      "type": "java.lang.Boolean",
+      "description": "build api context on service startup."
+    },
+    {
+      "name": "openapi.apidoc.default-viewer",
+      "type": "java.lang.String",
+      "description": "viewer of apidocs.default:redoc.",
+      "values": [
+        {
+          "value": "redoc",
+          "description": "https://github.com/Redocly/redoc"
+        },
+        {
+          "value": "swagger",
+          "description": "https://github.com/swagger-api/swagger-ui"
+        }
+      ]
+    },
+    {
+      "name": "openapi.group",
+      "type": "java.lang.String",
+      "description": "open group name."
+    },
+    {
+      "name": "openapi.title",
+      "type": "java.lang.String",
+      "description": "open api tittle."
+    },
+    {
+      "name": "openapi.desc",
+      "type": "java.lang.String",
+      "description": "description of open api."
+    },
+    {
+      "name": "openapi.version",
+      "type": "java.lang.String",
+      "description": "the version of open api."
+    },
+    {
+      "name": "openapi.terms_of_service_url",
+      "type": "java.lang.String",
+      "description": "terms of service url."
+    },
+    {
+      "name": "openapi.contact_name",
+      "type": "java.lang.String",
+      "description": "contact name."
+    },
+    {
+      "name": "openapi.contact_url",
+      "type": "java.lang.String",
+      "description": "contact url."
+    },
+    {
+      "name": "openapi.contact_email",
+      "type": "java.lang.String",
+      "description": "contact email."
+    },
+    {
+      "name": "openapi.license",
+      "type": "java.lang.String",
+      "description": "license tittle."
+    },
+    {
+      "name": "openapi.license_url",
+      "type": "java.lang.String",
+      "description": "license detail url."
+    }
+  ]
+}

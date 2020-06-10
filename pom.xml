@@ -18,6 +18,7 @@
         <module>bukitmerah-serialize</module>
         <module>bukitmerah-middleware-connector</module>
         <module>bukitmerah-all</module>
+        <module>bukitmerah-openapi</module>
     </modules>
 
     <name>Bukit Merah-${project.version} Parent</name>
