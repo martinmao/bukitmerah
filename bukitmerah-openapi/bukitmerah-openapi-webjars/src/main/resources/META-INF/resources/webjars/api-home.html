@@ -8,9 +8,9 @@
 <script src="jquery/3.5.1/jquery.min.js"></script>
 <script>
     $(document).ready(function(){
-        $.getJSON('api-docs/list',function(result){
+        $.getJSON('../api-docs/list',function(result){
             $.each(result, function(i, item){
-                $('h1').append('<h2><a href='+item.url+'>'+item.tittle+'</a></h2>');
+                $('h1').append('<h5 class=""><a href='+item.url+'>'+item.tittle+'</a></h5>');
             });
         });
     });
