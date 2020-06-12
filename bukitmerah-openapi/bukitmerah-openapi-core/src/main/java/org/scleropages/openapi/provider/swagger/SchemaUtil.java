@@ -82,7 +82,7 @@ public abstract class SchemaUtil {
 
     private static final String[] IGNORE_PROPERTY_NAMES = new String[]{"class"};
 
-    private static final String DEFAULT_SCHEMAS_PATH = "#/components/schemas/";
+    public static final String DEFAULT_SCHEMAS_PATH = "#/components/schemas/";
 
     private static final Logger logger = LoggerFactory.getLogger(SchemaUtil.class);
 

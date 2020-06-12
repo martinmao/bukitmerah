@@ -15,6 +15,7 @@
  */
 package org.scleropages.openapi.provider.swagger;
 
+import io.swagger.v3.oas.models.media.ObjectSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import org.springframework.core.MethodParameter;
 import org.springframework.util.Assert;
@@ -49,7 +50,10 @@ public interface SchemaResolver {
         String name = PROCESSING_FLAG_PREFIX + getClass().getSimpleName();
         resolveContext.setAttribute(name, PROCESSING_FLAG);
         try {
-            return resolveInternal(javaType, methodParameter, fieldPropertyDescriptor, resolveContext);
+            Schema targetSchema = resolveInternal(javaType, methodParameter, fieldPropertyDescriptor, resolveContext);
+            ObjectSchema schemaRef = new ObjectSchema();
+            schemaRef.$ref(SchemaUtil.DEFAULT_SCHEMAS_PATH + targetSchema.getName());
+            return schemaRef;
         } finally {
             Assert.isTrue(resolveContext.removeAttribute(name, PROCESSING_FLAG), "invalid state.");
         }
@@ -57,7 +61,8 @@ public interface SchemaResolver {
 
 
     /**
-     * resolved given class as {@link Schema}
+     * resolved given class as {@link Schema}.
+     * 注意尽返回schema ref，而不是原本的schema，即避免内联返回值 或内联属性. 否则 {@link org.openapitools.codegen.InlineModelResolver} 代码生成会产生难以理解的命名.
      *
      * @param javaType
      * @param methodParameter

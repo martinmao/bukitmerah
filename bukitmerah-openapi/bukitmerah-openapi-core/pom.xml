@@ -22,8 +22,8 @@
             <artifactId>swagger-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.swagger.codegen.v3</groupId>
-            <artifactId>swagger-codegen</artifactId>
+            <groupId>org.openapitools</groupId>
+            <artifactId>openapi-generator</artifactId>
         </dependency>
 
         <dependency>

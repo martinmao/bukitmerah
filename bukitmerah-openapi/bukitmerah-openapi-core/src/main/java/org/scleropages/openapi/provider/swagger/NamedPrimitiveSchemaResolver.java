@@ -36,19 +36,19 @@ public class NamedPrimitiveSchemaResolver implements SchemaResolver {
 
     @Override
     public Schema resolveInternal(Class javaType, MethodParameter methodParameter, FieldPropertyDescriptor fieldPropertyDescriptor, ResolveContext resolveContext) {
-        ObjectSchema namedPrimitive = new ObjectSchema();
-        namedPrimitive.addProperties("name", new StringSchema());
-        if (null != methodParameter) {
-            Class<?> resolveGeneric = ResolvableType.forMethodParameter(methodParameter).resolveGeneric(0);
-            if (null != resolveGeneric) {
-                namedPrimitive.addProperties("value", SchemaUtil.createSchema(resolveGeneric, resolveContext));
-            } else {
-                namedPrimitive.addProperties("value", new StringSchema());
-            }
-        } else {
-            namedPrimitive.addProperties("value", new StringSchema());
-        }
-        return namedPrimitive;
+
+        Class valueType = null != methodParameter ? ResolvableType.forMethodParameter(methodParameter).resolveGeneric(0) : String.class;
+
+        Class finalValueType = valueType != null ? valueType : String.class;
+
+        Schema schema = resolveContext.getSwaggerOpenApi().computeSchemaIfAbsent(javaType, valueType, (cls1, cls2) -> {
+            ObjectSchema namedPrimitive = new ObjectSchema();
+            namedPrimitive.addProperties("name", new StringSchema());
+            namedPrimitive.addProperties("value", SchemaUtil.createSchema(finalValueType, resolveContext));
+            return namedPrimitive;
+        });
+        schema.setName(javaType.getName() + finalValueType.getSimpleName());
+        return schema;
     }
 
     @Override

@@ -15,8 +15,14 @@
  */
 package org.scleropages.openapi.web;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import org.openapitools.codegen.ClientOptInput;
+import org.openapitools.codegen.CodegenConfig;
+import org.openapitools.codegen.CodegenConfigLoader;
+import org.openapitools.codegen.DefaultGenerator;
+import org.openapitools.codegen.config.CodegenConfigurator;
 import org.scleropages.crud.web.Views;
-
 import org.scleropages.openapi.OpenApi;
 import org.scleropages.openapi.OpenApiContextHolder;
 import org.scleropages.openapi.annotation.ApiIgnore;
@@ -24,9 +30,12 @@ import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -46,8 +55,37 @@ public class OpenApiAction {
     @GetMapping("{id}")
     public void openApi(@PathVariable String id, HttpServletResponse response) {
         OpenApi openApi = OpenApiContextHolder.getOpenApiContext().openApi(id);
-        Assert.notNull(openApi,"no open api found by given id.");
+        Assert.notNull(openApi, "no open api found by given id.");
         Views.renderYaml(response, openApi.render());
+    }
+
+    @GetMapping("codegen")
+    public List<Map<String, Object>> codeGeneratorProvidersMetadata() {
+        List<Map<String, Object>> providersMetadata = Lists.newArrayList();
+        List<CodegenConfig> all = CodegenConfigLoader.getAll();
+        all.forEach(codegenConfig -> {
+            Map<String, Object> providerMetadata = Maps.newLinkedHashMap();
+            providersMetadata.add(providerMetadata);
+            providerMetadata.put(codegenConfig.getName(),codegenConfig.getHelp());
+            providerMetadata.put("libraries", codegenConfig.supportedLibraries());
+            providerMetadata.put("template",codegenConfig.templateDir());
+            providerMetadata.put("tag",codegenConfig.getTag());
+        });
+        return providersMetadata;
+    }
+
+
+    public static void main(String[] args) {
+        CodegenConfigurator codegenConfigurator = new CodegenConfigurator();
+        codegenConfigurator.setVerbose(true);
+        codegenConfigurator.setSkipOverwrite(true);
+        codegenConfigurator.setRemoveOperationIdPrefix(true);
+        codegenConfigurator.setInputSpec("http://localhost:18080/kapuas/open-api/org.scleropages.kapuas.security");
+        codegenConfigurator.setGeneratorName("java-customization");
+        codegenConfigurator.setLibrary("feign");
+        codegenConfigurator.setOutputDir("/Users/martin/Downloads/gen");
+        final ClientOptInput input = codegenConfigurator.toClientOptInput();
+        new DefaultGenerator().opts(input).generate();
     }
 
 }

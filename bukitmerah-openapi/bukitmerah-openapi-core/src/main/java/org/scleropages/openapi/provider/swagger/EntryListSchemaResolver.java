@@ -23,6 +23,8 @@ import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
 import org.springframework.util.ClassUtils;
 
+import java.util.Map;
+
 /**
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
@@ -34,29 +36,61 @@ public class EntryListSchemaResolver implements SchemaResolver {
 
     @Override
     public Schema resolveInternal(Class javaType, MethodParameter methodParameter, FieldPropertyDescriptor fieldPropertyDescriptor, ResolveContext resolveContext) {
-        ObjectSchema entryListSchema = new ObjectSchema();
-        ArraySchema entriesSchema = new ArraySchema();
-        ObjectSchema entriesItemSchema = new ObjectSchema();
-        entriesSchema.items(entriesItemSchema);
-        entryListSchema.addProperties("items", entriesSchema);
+
+        Class ruleInterface = javaType;
         if (null != fieldPropertyDescriptor) {
-            ResolvableType resolvableType = fieldPropertyDescriptor.createResolvableType();
-            populateEntriesItemProperties(entriesItemSchema, resolvableType, resolveContext);
+            ruleInterface = fieldPropertyDescriptor.getPropertyField().getDeclaringClass();
         }
-        if (null != methodParameter) {
-            ResolvableType resolvableType = ResolvableType.forMethodParameter(methodParameter);
-            populateEntriesItemProperties(entriesItemSchema, resolvableType, resolveContext);
+        if (null == ruleInterface && null != methodParameter) {
+            ruleInterface = methodParameter.getDeclaringClass();
         }
-        return entryListSchema;
+        Schema schema = resolveContext.getSwaggerOpenApi().computeSchemaIfAbsent(javaType, ruleInterface, (cls1, cls2) -> {
+            ObjectSchema entryListSchema = new ObjectSchema();
+            ArraySchema entriesSchema = new ArraySchema();
+            ObjectSchema entriesItemSchema = new ObjectSchema();
+            entriesSchema.items(entriesItemSchema);
+            entryListSchema.addProperties("items", entriesSchema);
+            Map.Entry<Class, Class> genericTypeOfEntriesItemSchema = getGenericTypesOfEntriesItemSchema(methodParameter, fieldPropertyDescriptor);
+            entriesItemSchema.addProperties("key", SchemaUtil.createSchema(genericTypeOfEntriesItemSchema.getKey(), resolveContext));
+            entriesItemSchema.addProperties("value", SchemaUtil.createSchema(genericTypeOfEntriesItemSchema.getValue(), resolveContext));
+            return entryListSchema;
+        });
+        schema.setName(javaType.getName() + ruleInterface.getSimpleName());
+        return schema;
     }
 
-    protected void populateEntriesItemProperties(ObjectSchema entriesItemSchema, ResolvableType resolvableType, ResolveContext resolveContext) {
-        Class<?> entryKeyType = resolvableType.resolveGeneric(0);
-        Class<?> entryValueType = resolvableType.resolveGeneric(1);
-        if (null != entryKeyType && null != entryValueType) {
-            entriesItemSchema.addProperties("key", SchemaUtil.createSchema(entryKeyType, resolveContext));
-            entriesItemSchema.addProperties("value", SchemaUtil.createSchema(entryValueType, resolveContext));
+    protected Map.Entry<Class, Class> getGenericTypesOfEntriesItemSchema(MethodParameter methodParameter, FieldPropertyDescriptor fieldPropertyDescriptor) {
+        Class keyType = String.class;
+        Class valueType = String.class;
+        ResolvableType resolvableType = null;
+        if (null != fieldPropertyDescriptor) {
+            resolvableType = fieldPropertyDescriptor.createResolvableType();
         }
+        if (null != methodParameter) {
+            resolvableType = ResolvableType.forMethodParameter(methodParameter);
+        }
+        if (null != resolvableType) {
+            keyType = resolvableType.resolveGeneric(0);
+            valueType = resolvableType.resolveGeneric(1);
+        }
+        Class finalKeyType = keyType;
+        Class finalValueType = valueType;
+        return new Map.Entry<Class, Class>() {
+            @Override
+            public Class getKey() {
+                return finalKeyType;
+            }
+
+            @Override
+            public Class getValue() {
+                return finalValueType;
+            }
+
+            @Override
+            public Class setValue(Class value) {
+                throw new IllegalStateException();
+            }
+        };
     }
 
     @Override
