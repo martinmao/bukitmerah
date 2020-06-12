@@ -44,15 +44,26 @@ public class EntryListSchemaResolver implements SchemaResolver {
         if (null == ruleInterface && null != methodParameter) {
             ruleInterface = methodParameter.getDeclaringClass();
         }
+        Map.Entry<Class, Class> genericTypeOfEntriesItemSchema = getGenericTypesOfEntriesItemSchema(methodParameter, fieldPropertyDescriptor);
+        Class keyType = genericTypeOfEntriesItemSchema.getKey();
+        Class valueType = genericTypeOfEntriesItemSchema.getValue();
+
+        String entriesSchemaName = javaType.getName() + keyType.getSimpleName() + valueType.getSimpleName();
+        resolveContext.getSwaggerOpenApi().computeSchemaIfAbsent(EntryList.Entry.class, entriesSchemaName, (cls, id) -> {
+            ObjectSchema entriesItemSchema = new ObjectSchema();
+            entriesItemSchema.setName(entriesSchemaName);
+            entriesItemSchema.addProperties("key", SchemaUtil.createSchema(keyType, resolveContext));
+            entriesItemSchema.addProperties("value", SchemaUtil.createSchema(valueType, resolveContext));
+            return entriesItemSchema;
+        });
+
         Schema schema = resolveContext.getSwaggerOpenApi().computeSchemaIfAbsent(javaType, ruleInterface, (cls1, cls2) -> {
             ObjectSchema entryListSchema = new ObjectSchema();
             ArraySchema entriesSchema = new ArraySchema();
-            ObjectSchema entriesItemSchema = new ObjectSchema();
-            entriesSchema.items(entriesItemSchema);
             entryListSchema.addProperties("items", entriesSchema);
-            Map.Entry<Class, Class> genericTypeOfEntriesItemSchema = getGenericTypesOfEntriesItemSchema(methodParameter, fieldPropertyDescriptor);
-            entriesItemSchema.addProperties("key", SchemaUtil.createSchema(genericTypeOfEntriesItemSchema.getKey(), resolveContext));
-            entriesItemSchema.addProperties("value", SchemaUtil.createSchema(genericTypeOfEntriesItemSchema.getValue(), resolveContext));
+            ObjectSchema refEntriesItemSchema = new ObjectSchema();
+            refEntriesItemSchema.$ref(SchemaUtil.DEFAULT_SCHEMAS_PATH + entriesSchemaName);
+            entriesSchema.items(refEntriesItemSchema);
             return entryListSchema;
         });
         schema.setName(javaType.getName() + ruleInterface.getSimpleName());
@@ -61,17 +72,19 @@ public class EntryListSchemaResolver implements SchemaResolver {
 
     protected Map.Entry<Class, Class> getGenericTypesOfEntriesItemSchema(MethodParameter methodParameter, FieldPropertyDescriptor fieldPropertyDescriptor) {
         Class keyType = String.class;
-        Class valueType = String.class;
+        Class valueType = Object.class;
         ResolvableType resolvableType = null;
         if (null != fieldPropertyDescriptor) {
             resolvableType = fieldPropertyDescriptor.createResolvableType();
         }
-        if (null != methodParameter) {
+        if (null == resolvableType || null != methodParameter) {
             resolvableType = ResolvableType.forMethodParameter(methodParameter);
         }
         if (null != resolvableType) {
             keyType = resolvableType.resolveGeneric(0);
             valueType = resolvableType.resolveGeneric(1);
+            keyType = null != keyType ? keyType : String.class;
+            valueType = null != valueType ? valueType : Object.class;
         }
         Class finalKeyType = keyType;
         Class finalValueType = valueType;

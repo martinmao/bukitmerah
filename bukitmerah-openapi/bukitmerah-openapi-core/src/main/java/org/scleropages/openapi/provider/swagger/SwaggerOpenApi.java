@@ -30,7 +30,6 @@ import io.swagger.v3.oas.models.media.Schema;
 import org.apache.commons.collections.ComparatorUtils;
 import org.scleropages.openapi.OpenApi;
 
-
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.List;
@@ -61,9 +60,9 @@ public class SwaggerOpenApi implements OpenApi<OpenAPI> {
 
     /**
      * cache all schema definitions.
-     * type class->rule interface class(User.Create.class/User.Update.class)->schema
+     * type class->rule interface class(User.class,User.Update.class)->schema
      */
-    private final Map<Class, Map<Class, Schema>> javaTypeToSchemas = Maps.newHashMap();
+    private final Map<Class, Map<String, Schema>> javaTypeToSchemas = Maps.newHashMap();
 
     public List<Schema> getAllSchemas() {
         List<Schema> schemas = Lists.newArrayList();
@@ -77,7 +76,7 @@ public class SwaggerOpenApi implements OpenApi<OpenAPI> {
     }
 
     public Schema getSchema(Class javaType, Class ruleType) {
-        return javaTypeToSchemas.get(javaType).get(ruleType);
+        return javaTypeToSchemas.get(javaType).get(ruleType.getName());
     }
 
     public SwaggerOpenApi(String basePackage, OpenAPI openAPI, String openApiRenderFormat, boolean openApiRenderPretty) {
@@ -131,8 +130,13 @@ public class SwaggerOpenApi implements OpenApi<OpenAPI> {
     }
 
     public Schema computeSchemaIfAbsent(Class typeClass, Class ruleInterface, BiFunction<Class, Class, ? extends Schema> schemaLoader) {
-        return javaTypeToSchemas.computeIfAbsent(typeClass, clazz -> Maps.newHashMap()).computeIfAbsent(ruleInterface, clazz -> schemaLoader.apply(typeClass, ruleInterface));
+        return javaTypeToSchemas.computeIfAbsent(typeClass, clazz -> Maps.newHashMap()).computeIfAbsent(ruleInterface.getName(), clazz -> schemaLoader.apply(typeClass, ruleInterface));
     }
+
+    public Schema computeSchemaIfAbsent(Class typeClass, String id, BiFunction<Class, String, ? extends Schema> schemaLoader) {
+        return javaTypeToSchemas.computeIfAbsent(typeClass, clazz -> Maps.newHashMap()).computeIfAbsent(id, clazz -> schemaLoader.apply(typeClass, id));
+    }
+
 
     public Map<String, Method> getOperationIdToMethod() {
         return operationIdToMethod;

@@ -49,23 +49,31 @@ public class PageSchemaResolver implements SchemaResolver {
         if (pageSchemaCreated.compareAndSet(false, true)) {
             SchemaUtil.createSchema(javaType, resolveContext);
         }
-        Schema copedSchema = new Schema();
-        Schema sourceSchema = resolveContext.getSwaggerOpenApi().getSchema(Page.class, Page.class);
-        sourceSchema.getProperties().forEach((k, v) -> copedSchema.addProperties((String) k, (Schema) v));
-        ArraySchema contentArray = new ArraySchema();
-        copedSchema.addProperties("content", contentArray);
-        Class<?> contentType = null;
+        Class<?> contentType = getPageContentType(methodParameter, fieldPropertyDescriptor);
+        Schema contentSchema = SchemaUtil.createSchema(contentType, methodParameter, resolveContext);
+        Schema pageSchema = resolveContext.getSwaggerOpenApi().getSchema(Page.class, Page.class);
+
+
+        return resolveContext.getSwaggerOpenApi().computeSchemaIfAbsent(Page.class, contentType, (cls1, cls2) -> {
+            Schema pageContentSchema = new Schema();
+            pageSchema.getProperties().forEach((k, v) -> pageContentSchema.addProperties((String) k, (Schema) v));
+            ArraySchema contentArray = new ArraySchema();
+            pageContentSchema.addProperties("content", contentArray);
+            pageContentSchema.setName(contentType.getPackage().getName()+"." + Page.class.getSimpleName() + contentType.getSimpleName());
+            contentArray.setItems(contentSchema);
+            return pageContentSchema;
+        });
+    }
+
+    protected Class getPageContentType(MethodParameter methodParameter, FieldPropertyDescriptor fieldPropertyDescriptor) {
         Field propertyField = null != fieldPropertyDescriptor ? fieldPropertyDescriptor.getPropertyField() : null;
         if (null != propertyField) {//page 作为对象属性.
-            contentType = SchemaUtil.getPropertyConcreteType(new FieldPropertyDescriptor(null, propertyField));
+            return SchemaUtil.getPropertyConcreteType(new FieldPropertyDescriptor(null, propertyField));
         }
-        if (null != methodParameter && methodParameter.getParameterIndex() == -1 && contentType == null) {//page作为返回值
-            contentType = SchemaUtil.getParameterConcreteType(methodParameter, ResolvableType.forMethodParameter(methodParameter).resolveGeneric(0));
+        if (null != methodParameter && methodParameter.getParameterIndex() == -1) {//page作为返回值
+            return SchemaUtil.getParameterConcreteType(methodParameter, ResolvableType.forMethodParameter(methodParameter).resolveGeneric(0));
         }
-        Schema contentSchema = SchemaUtil.createSchema(SchemaUtil.getParameterConcreteType(methodParameter, contentType), methodParameter, resolveContext);
-        copedSchema.setName(Page.class.getName() + contentType.getSimpleName());
-        contentArray.setItems(contentSchema);
-        return copedSchema;
+        return Object.class;
     }
 
     @Override

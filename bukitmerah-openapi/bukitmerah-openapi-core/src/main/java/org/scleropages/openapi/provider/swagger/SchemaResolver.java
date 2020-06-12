@@ -19,6 +19,7 @@ import io.swagger.v3.oas.models.media.ObjectSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import org.springframework.core.MethodParameter;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.util.Objects;
 
@@ -27,8 +28,9 @@ import java.util.Objects;
  */
 public interface SchemaResolver {
 
-    static final String PROCESSING_FLAG_PREFIX = "PROCESSING_FLAG_PREFIX.";
-    static final Boolean PROCESSING_FLAG = new Boolean(true);
+    public static final String PROCESSING_FLAG_PREFIX = "PROCESSING_FLAG_PREFIX.";
+    public static final String IS_REF_SCHEMA = "IS_REF_SCHEMA";
+    public static final Boolean PROCESSING_FLAG = new Boolean(true);
 
     default boolean support(Class javaType, MethodParameter methodParameter, FieldPropertyDescriptor fieldPropertyDescriptor, ResolveContext resolveContext) {
         return (!Objects.equals(resolveContext.getAttribute(PROCESSING_FLAG_PREFIX + getClass().getSimpleName()), PROCESSING_FLAG)) && supportInternal(javaType, methodParameter, fieldPropertyDescriptor, resolveContext);
@@ -46,11 +48,25 @@ public interface SchemaResolver {
     boolean supportInternal(Class javaType, MethodParameter methodParameter, FieldPropertyDescriptor fieldPropertyDescriptor, ResolveContext resolveContext);
 
 
+    /**
+     * @param javaType
+     * @param methodParameter
+     * @param fieldPropertyDescriptor
+     * @param resolveContext
+     * @return
+     */
     default Schema resolve(Class javaType, MethodParameter methodParameter, FieldPropertyDescriptor fieldPropertyDescriptor, ResolveContext resolveContext) {
         String name = PROCESSING_FLAG_PREFIX + getClass().getSimpleName();
         resolveContext.setAttribute(name, PROCESSING_FLAG);
         try {
+            //返回schema ref，而不是原本的schema，即避免内联返回值 或内联属性. 否则 {@link org.openapitools.codegen.InlineModelResolver} 代码生成会产生难以理解的命名.
             Schema targetSchema = resolveInternal(javaType, methodParameter, fieldPropertyDescriptor, resolveContext);
+            if (Objects.equals(resolveContext.getAttributeOnce(IS_REF_SCHEMA), true)) {
+                return targetSchema;
+            }
+            if (StringUtils.hasText(targetSchema.get$ref())) {
+                return targetSchema;
+            }
             ObjectSchema schemaRef = new ObjectSchema();
             schemaRef.$ref(SchemaUtil.DEFAULT_SCHEMAS_PATH + targetSchema.getName());
             return schemaRef;
@@ -62,7 +78,6 @@ public interface SchemaResolver {
 
     /**
      * resolved given class as {@link Schema}.
-     * 注意尽返回schema ref，而不是原本的schema，即避免内联返回值 或内联属性. 否则 {@link org.openapitools.codegen.InlineModelResolver} 代码生成会产生难以理解的命名.
      *
      * @param javaType
      * @param methodParameter

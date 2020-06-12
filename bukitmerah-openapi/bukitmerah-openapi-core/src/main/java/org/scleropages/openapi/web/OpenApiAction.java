@@ -17,6 +17,7 @@ package org.scleropages.openapi.web;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.apache.commons.io.FileUtils;
 import org.openapitools.codegen.ClientOptInput;
 import org.openapitools.codegen.CodegenConfig;
 import org.openapitools.codegen.CodegenConfigLoader;
@@ -34,6 +35,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -75,17 +78,22 @@ public class OpenApiAction {
     }
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+
+        FileUtils.deleteDirectory(new File("/Users/martin/Downloads/gen"));
+
         CodegenConfigurator codegenConfigurator = new CodegenConfigurator();
         codegenConfigurator.setVerbose(true);
         codegenConfigurator.setSkipOverwrite(true);
         codegenConfigurator.setRemoveOperationIdPrefix(true);
         codegenConfigurator.setInputSpec("http://localhost:18080/kapuas/open-api/org.scleropages.kapuas.security");
         codegenConfigurator.setGeneratorName("java-customization");
-        codegenConfigurator.setLibrary("feign");
+        codegenConfigurator.setApiPackage("org.scleropages.kapuas.security");
+        codegenConfigurator.setModelPackage("org.scleropages.kapuas.security.model");
+        codegenConfigurator.setLibrary("resttemplate");
         codegenConfigurator.setOutputDir("/Users/martin/Downloads/gen");
         final ClientOptInput input = codegenConfigurator.toClientOptInput();
-        new DefaultGenerator().opts(input).generate();
+        List<File> generatedFiles = new DefaultGenerator().opts(input).generate();
     }
 
 }

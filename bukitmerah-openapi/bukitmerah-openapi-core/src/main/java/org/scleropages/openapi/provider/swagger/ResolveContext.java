@@ -85,6 +85,13 @@ public class ResolveContext {
         return attributes.get(name);
     }
 
+    public Object getAttributeOnce(String name) {
+        Object value = getAttribute(name);
+        if (null != value)
+            attributes.remove(name, value);
+        return value;
+    }
+
     public boolean removeAttribute(String name, Object exceptValue) {
         return attributes.remove(name, exceptValue);
     }
