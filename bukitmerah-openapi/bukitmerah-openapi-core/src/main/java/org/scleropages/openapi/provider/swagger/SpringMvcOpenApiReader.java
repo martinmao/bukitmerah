@@ -296,8 +296,8 @@ public class SpringMvcOpenApiReader implements OpenApiReader {
             });
         }
         if (ClassUtils.isAssignable(Pageable.class, methodParameter.getParameterType())) {
-            createQueryParameter(PageableBuilder.PAGE_PREFIX + PageableBuilder.PAGE_NUMBER_PARAM_NAME, methodParameter, resolveContext, false);
-            createQueryParameter(PageableBuilder.PAGE_PREFIX + PageableBuilder.PAGE_SIZE_PARAM_NAME, methodParameter, resolveContext, false);
+            operation.addParametersItem(createQueryParameter(PageableBuilder.PAGE_PREFIX + PageableBuilder.PAGE_NUMBER_PARAM_NAME, methodParameter, resolveContext, false));
+            operation.addParametersItem(createQueryParameter(PageableBuilder.PAGE_PREFIX + PageableBuilder.PAGE_SIZE_PARAM_NAME, methodParameter, resolveContext, false));
         }
         if (ClassUtils.isAssignable(WebSearchFilter.class, methodParameter.getParameterType())) {
             createQueryParameter(SearchFilter.SearchFilterBuilder.SEARCH_PREFIX + "{expression}", methodParameter, resolveContext, false);
