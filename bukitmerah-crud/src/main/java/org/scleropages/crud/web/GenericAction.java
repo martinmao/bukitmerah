@@ -45,18 +45,6 @@ public interface GenericAction {
         return PageableBuilder.build(pageParams, SortBuilder.build(sortParams));
     }
 
-    /**
-     * Build a group of {@link SearchFilter} for condition search from {@link HttpServletRequest} by default conventions
-     *
-     * @param request
-     * @return
-     */
-    default Map<String, SearchFilter> buildSearchFilterFromRequest(HttpServletRequest request) {
-        Map<String, Object> searchParams = Servlets.getParametersStartingWith(request,
-                SearchFilter.SearchFilterBuilder.SEARCH_PREFIX);
-        return SearchFilter.SearchFilterBuilder.build(searchParams);
-    }
-
 
     /**
      * build a object using given json text and excepted type.

@@ -26,6 +26,7 @@ import com.google.common.collect.Maps;
 import org.scleropages.core.mapper.JsonMapper2;
 import org.scleropages.crud.FrameworkContext;
 import org.scleropages.crud.dao.orm.jpa.hibernate.GenericHibernateCustomizer;
+import org.scleropages.crud.web.WebSearchFilterArgumentResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -43,6 +44,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -56,7 +59,7 @@ import java.util.Optional;
  */
 @Configuration
 @Import({BizExceptionTranslationConfiguration.class, DataSourceRoutingConfiguration.class, GenericLoggingConfiguration.class})
-public class CrudFeaturesImporter implements ApplicationListener<ContextRefreshedEvent> {
+public class CrudFeaturesImporter implements ApplicationListener<ContextRefreshedEvent>, WebMvcConfigurer {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -136,7 +139,13 @@ public class CrudFeaturesImporter implements ApplicationListener<ContextRefreshe
 
     @Bean
     @ConditionalOnProperty(name = "hibernate.generic_interceptor_enabled", matchIfMissing = true)
-    public GenericHibernateCustomizer genericHibernateCustomizer(){
+    public GenericHibernateCustomizer genericHibernateCustomizer() {
         return new GenericHibernateCustomizer();
+    }
+
+
+    @Override
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+        resolvers.add(new WebSearchFilterArgumentResolver());
     }
 }
