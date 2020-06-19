@@ -300,7 +300,7 @@ public class SpringMvcOpenApiReader implements OpenApiReader {
             operation.addParametersItem(createQueryParameter(PageableBuilder.PAGE_PREFIX + PageableBuilder.PAGE_SIZE_PARAM_NAME, methodParameter, resolveContext, false));
         }
         if (ClassUtils.isAssignable(WebSearchFilter.class, methodParameter.getParameterType())) {
-            createQueryParameter(SearchFilter.SearchFilterBuilder.SEARCH_PREFIX + "{expression}", methodParameter, resolveContext, false);
+            operation.addParametersItem(createQueryParameter(SearchFilter.SearchFilterBuilder.SEARCH_PREFIX + "{expression}", methodParameter, resolveContext, false));
         }
         if (methodParameter.getParameterIndex() == -1) {
             operation.setResponses(createApiResponses(methodParameter, resolveContext));
