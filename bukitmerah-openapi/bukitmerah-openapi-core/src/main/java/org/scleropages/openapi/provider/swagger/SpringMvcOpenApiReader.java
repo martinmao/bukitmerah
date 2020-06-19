@@ -42,8 +42,10 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.scleropages.core.util.Namings;
+import org.scleropages.crud.dao.orm.PageableBuilder;
+import org.scleropages.crud.dao.orm.SearchFilter;
 import org.scleropages.crud.exception.BizExceptionHttpView;
-
+import org.scleropages.crud.web.WebSearchFilter;
 import org.scleropages.openapi.OpenApi;
 import org.scleropages.openapi.annotation.ApiIgnore;
 import org.scleropages.openapi.annotation.ApiModel;
@@ -61,6 +63,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.core.annotation.SynthesizingMethodParameter;
+import org.springframework.data.domain.Pageable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -288,6 +291,13 @@ public class SpringMvcOpenApiReader implements OpenApiReader {
                 postParameterCreation(methodParameter, parameter, schema);
             });
         }
+        if (ClassUtils.isAssignable(Pageable.class, methodParameter.getParameterType())) {
+            createQueryParameter(PageableBuilder.PAGE_PREFIX + PageableBuilder.PAGE_NUMBER_PARAM_NAME, methodParameter, resolveContext, false);
+            createQueryParameter(PageableBuilder.PAGE_PREFIX + PageableBuilder.PAGE_SIZE_PARAM_NAME, methodParameter, resolveContext, false);
+        }
+        if (ClassUtils.isAssignable(WebSearchFilter.class, methodParameter.getParameterType())) {
+            createQueryParameter(SearchFilter.SearchFilterBuilder.SEARCH_PREFIX + "{expression}", methodParameter, resolveContext, false);
+        }
         if (methodParameter.getParameterIndex() == -1) {
             operation.setResponses(createApiResponses(methodParameter, resolveContext));
         }
@@ -344,6 +354,12 @@ public class SpringMvcOpenApiReader implements OpenApiReader {
         QueryParameter parameter = new QueryParameter();
         String parameterName = MergedAnnotations.from(requestParam).get(RequestParam.class).getString("name");
         postParameterCreationInternal(parameterName, methodParameter, parameter, requestParam.required(), resolveContext);
+        return parameter;
+    }
+
+    protected Parameter createQueryParameter(String name, MethodParameter methodParameter, ResolveContext resolveContext, boolean required) {
+        QueryParameter parameter = new QueryParameter();
+        postParameterCreationInternal(name, methodParameter, parameter, required, resolveContext);
         return parameter;
     }
 
