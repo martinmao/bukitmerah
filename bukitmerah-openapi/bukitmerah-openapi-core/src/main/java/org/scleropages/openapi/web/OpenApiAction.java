@@ -93,6 +93,10 @@ public class OpenApiAction {
         codegenConfigurator.setOutputDir("/Users/martin/Downloads/gen");
         final ClientOptInput input = codegenConfigurator.toClientOptInput();
         List<File> generatedFiles = new DefaultGenerator().opts(input).generate();
+
+        for (File generatedFile : generatedFiles) {
+            System.out.println(generatedFile);
+        }
     }
 
 }
