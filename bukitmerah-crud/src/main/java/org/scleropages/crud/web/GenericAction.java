@@ -16,14 +16,7 @@
 package org.scleropages.crud.web;
 
 import org.scleropages.core.mapper.JsonMapper2;
-import org.scleropages.crud.dao.orm.PageableBuilder;
-import org.scleropages.crud.dao.orm.SearchFilter;
-import org.scleropages.crud.dao.orm.SortBuilder;
-import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
 
 /**
  * Base web controller for business models.
@@ -31,20 +24,6 @@ import java.util.Map;
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
 public interface GenericAction {
-
-
-    /**
-     * Build {@link Pageable} for page search from {@link HttpServletRequest} by default conventions
-     *
-     * @param request
-     * @return
-     */
-    default Pageable buildPageableFromRequest(HttpServletRequest request) {
-        Map<String, Object> pageParams = Servlets.getParametersStartingWith(request, PageableBuilder.PAGE_PREFIX);
-        Map<String, Object> sortParams = Servlets.getParametersStartingWith(request, SortBuilder.SORT_PREFIX);
-        return PageableBuilder.build(pageParams, SortBuilder.build(sortParams));
-    }
-
 
     /**
      * build a object using given json text and excepted type.
