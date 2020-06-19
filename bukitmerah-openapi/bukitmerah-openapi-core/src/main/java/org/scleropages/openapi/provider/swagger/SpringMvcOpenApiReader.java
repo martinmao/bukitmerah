@@ -246,6 +246,10 @@ public class SpringMvcOpenApiReader implements OpenApiReader {
                 methodParameters.add(methodParameter);
                 continue;
             }
+            if (ClassUtils.isAssignable(Pageable.class, methodParameter.getParameterType())||ClassUtils.isAssignable(WebSearchFilter.class, methodParameter.getParameterType())) {
+                methodParameters.add(methodParameter);
+                continue;
+            }
         }
         methodParameters.add(new SynthesizingMethodParameter(controllerMethod, -1));//方法返回值
         return methodParameters.toArray(new MethodParameter[methodParameters.size()]);
