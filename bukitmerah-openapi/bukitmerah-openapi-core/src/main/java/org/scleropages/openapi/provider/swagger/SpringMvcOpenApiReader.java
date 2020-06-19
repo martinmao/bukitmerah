@@ -29,6 +29,7 @@ import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.parameters.PathParameter;
 import io.swagger.v3.oas.models.parameters.QueryParameter;
@@ -363,7 +364,11 @@ public class SpringMvcOpenApiReader implements OpenApiReader {
 
     protected Parameter createQueryParameter(String name, MethodParameter methodParameter, ResolveContext resolveContext, boolean required) {
         QueryParameter parameter = new QueryParameter();
-        postParameterCreationInternal(name, methodParameter, parameter, required, resolveContext);
+        parameter.setName(name);
+        parameter.setRequired(required);
+        StringSchema stringSchema = new StringSchema();
+        parameter.setSchema(stringSchema);
+        postParameterCreation(methodParameter, parameter, stringSchema);
         return parameter;
     }
 
