@@ -64,7 +64,7 @@ public abstract class PageableBuilder {
         sort = sort != null ? sort : SortBuilder.DEFAULT_NO_SORT;
         pageNumber = pageNumber == 0 ? 1 : pageNumber;
 
-        /* zero-based page index. */
+        /* spring data page is zero-based page index by default. */
         return PageRequest.of(pageNumber - 1, pageSize, sort);
     }
 }

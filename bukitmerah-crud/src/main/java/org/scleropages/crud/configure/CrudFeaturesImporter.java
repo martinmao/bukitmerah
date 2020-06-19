@@ -25,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.scleropages.core.mapper.JsonMapper2;
 import org.scleropages.crud.FrameworkContext;
+import org.scleropages.crud.dao.orm.PageableBuilder;
 import org.scleropages.crud.dao.orm.jpa.hibernate.GenericHibernateCustomizer;
 import org.scleropages.crud.web.WebSearchFilterArgumentResolver;
 import org.slf4j.Logger;
@@ -42,6 +43,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.data.web.config.PageableHandlerMethodArgumentResolverCustomizer;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -147,5 +149,16 @@ public class CrudFeaturesImporter implements ApplicationListener<ContextRefreshe
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.add(new WebSearchFilterArgumentResolver());
+    }
+
+    @Bean
+    public PageableHandlerMethodArgumentResolverCustomizer pageableHandlerMethodArgumentResolverCustomizer() {
+        return pageableResolver -> {
+            pageableResolver.setOneIndexedParameters(true);
+            pageableResolver.setPrefix(PageableBuilder.PAGE_PREFIX);
+            pageableResolver.setPageParameterName(PageableBuilder.PAGE_NUMBER_PARAM_NAME);
+            pageableResolver.setSizeParameterName(PageableBuilder.PAGE_SIZE_PARAM_NAME);
+            pageableResolver.setMaxPageSize(100);
+        };
     }
 }
