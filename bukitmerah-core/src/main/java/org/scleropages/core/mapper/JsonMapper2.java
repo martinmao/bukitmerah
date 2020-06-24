@@ -53,8 +53,8 @@ public abstract class JsonMapper2 {
      * Change default parser feature and generate feature can only be set once.User code should never use this method.
      * This method as extensions used for framework context to apply unified configuration.
      *
-     * @param parserFeature
-     * @param generateFeature
+     * @param parserFeatures
+     * @param generateFeatures
      */
     public static void applyFeatureConfig(List<Feature> parserFeatures, List<SerializerFeature> generateFeatures) {
         if (applyFeatureConfigure.compareAndSet(false, true)) {
@@ -104,8 +104,7 @@ public abstract class JsonMapper2 {
      * @param <T>
      * @return json object or null (any fault)
      */
-    @SafeVarargs
-    public static <T> T fromJson(String json, Class<T>... clazz) {
+    public static <T> T fromJson(String json, Class... clazz) {
         if (StringUtils.isEmpty(json)) {
             return null;
         }
