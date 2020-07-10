@@ -34,6 +34,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jackson.JacksonProperties;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.interceptor.CacheOperationInvocationContext;
 import org.springframework.cache.interceptor.CacheResolver;
 import org.springframework.cache.interceptor.SimpleCacheResolver;
@@ -59,6 +60,7 @@ import java.util.Optional;
 /**
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
+@EnableCaching
 @Configuration
 @Import({BizExceptionTranslationConfiguration.class, DataSourceRoutingConfiguration.class, GenericLoggingConfiguration.class})
 public class CrudFeaturesImporter implements ApplicationListener<ContextRefreshedEvent>, WebMvcConfigurer {
