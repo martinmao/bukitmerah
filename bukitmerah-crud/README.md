@@ -86,6 +86,23 @@ UserEntity user=userMapper.mapForSave(UserDto user);
 userRepository.save(user);
 ```
 ## 应用层规范
+应用层用于统一处理持久层逻辑关系，以及业务逻辑，事务边界，等繁重嘈杂工作。建议将应用层分为两层：
+* 管理层（xxxManager）:处理通用的、原子的、业务逻辑实现
+
+方法前缀
+```
+create，创建
+save，保存
+add，添加关系
+remove，移除关系
+get，返回0或1个结果，如果可能为空尽可能返回Optional
+find，返回0-多个结果(通常结果集是一个page)
+findAll，返回0-全部结果
+```
+
+* 应用层 (xxxApplication)：将通用的、原子的、业务逻辑进行编排调度，完成特定业务场景
+
+
 应用层使用的申明式校验框架（JSR-303）建议仅用于技术性校验（包括国际通用的业务属性，如年龄，性别，Email,URL等校验），即确保程序可以正常执行（检查空值，空串，空集，类型兼容，大小兼容），不会出现NPE（NullPointException），NFE（NumberFormatException）CCE（ClassCastException）等错误
 而业务规则性校验，必须完整在业务层代码中实现(提供完整清晰的规则视图)。且业务规则抛出的校验异常（类型，参数异常，规则异常）必须明确包含业务错误信息.
 ```
