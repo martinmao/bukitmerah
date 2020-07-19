@@ -91,13 +91,19 @@ userRepository.save(user);
 
 方法前缀
 ```
-create，创建
-save，保存
-add，添加关系
-remove，移除关系
-get，返回0或1个结果，如果可能为空尽可能返回Optional
-find，返回0-多个结果(通常结果集是一个page)
-findAll，返回0-全部结果
+create<ModelName>，创建
+save<ModelName>，保存
+
+bind<ModelName>To<ModelName>，设置关联关系
+unbind<ModelName>To<ModelName>，取消关联关系
+
+add<ModelName>To<ModelName>，添加关联关系
+remove<ModelName>To<ModelName>，移除关联关系
+
+
+getModelName，返回0或1个结果，如果可能为空尽可能返回Optional
+find<ModelName>[ByCondtions]Page，返回0-多个结果(结果集是一个page),如果conditons是SearchFilter则忽略。
+findAll<ModelName>[ByCondtions]，返回0-全部结果，如果condtions 是SearchFilter则忽略.
 ```
 
 * 应用层 (xxxApplication)：将通用的、原子的、业务逻辑进行编排调度，完成特定业务场景
