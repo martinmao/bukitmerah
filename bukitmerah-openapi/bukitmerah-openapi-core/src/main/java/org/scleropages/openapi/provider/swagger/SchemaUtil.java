@@ -569,6 +569,7 @@ public abstract class SchemaUtil {
         System.out.println(mutableGraph.putEdge("d", "e"));
         System.out.println(mutableGraph.putEdge("b", "e"));
         System.out.println(mutableGraph.putEdge("e", "a"));
+        System.out.println(".........................................");
         System.out.println(Graphs.hasCycle(mutableGraph));
         System.out.println(mutableGraph.hasEdgeConnecting("a", "c"));//a,c是否存在直接连接
         System.out.println(mutableGraph.adjacentNodes("a"));//返回a所有相邻节点
@@ -578,6 +579,8 @@ public abstract class SchemaUtil {
         System.out.println(mutableGraph.successors("b"));//返回b直接后续节点
         System.out.println(mutableGraph.inDegree("d"));//返回d入口连线数
         System.out.println(mutableGraph.outDegree("d"));//返回d出口连线数
+
+
         System.out.println("-------------");
         System.out.println(Graphs.reachableNodes(mutableGraph, "b"));//返回b所有可以达到的节点
 
@@ -592,6 +595,15 @@ public abstract class SchemaUtil {
         System.out.println(Graphs.hasCycle(mutableValueGraph.asGraph()));
         System.out.println(mutableValueGraph.hasEdgeConnecting("a", "c"));
         System.out.println(mutableValueGraph);
+
+
+
+        MutableGraph<Object> xxx = GraphBuilder.directed().allowsSelfLoops(false).build();
+        xxx.putEdge("root","a");
+        xxx.putEdge("root","b");
+        xxx.putEdge("root","c");
+        System.out.println(xxx.adjacentNodes("root"));
+
     }
 
 }
