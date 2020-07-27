@@ -15,6 +15,7 @@
  */
 package org.scleropages.crud;
 
+import org.hibernate.Hibernate;
 import org.mapstruct.MapperConfig;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -39,7 +40,6 @@ public interface ModelMapper<T, M> {
 
     }
 
-
     @Mapping(ignore = true, target = "id")
     T mapForSave(M model);
 
@@ -52,4 +52,14 @@ public interface ModelMapper<T, M> {
     Iterable<M> mapForReads(Iterable<T> entities);
 
     Iterable<T> mapForSave(Iterable<M> models);
+
+    /**
+     * return true if given entity is not null and initialized by JPA provider.
+     *
+     * @param entity
+     * @return
+     */
+    default boolean isEntityInitialized(Object entity) {
+        return (null != entity && Hibernate.isInitialized(entity));
+    }
 }
