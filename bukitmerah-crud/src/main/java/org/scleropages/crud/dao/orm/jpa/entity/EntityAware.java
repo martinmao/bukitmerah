@@ -16,9 +16,15 @@
 package org.scleropages.crud.dao.orm.jpa.entity;
 
 /**
+ * 在manager之间进行关联设置时使用，即不同manager 如果不想让repository产生交集，通过该接口设置依赖关系，此处存在entity 泄露风险，谨慎使用。
+ *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
 public interface EntityAware<T> {
 
+    /**
+     * 设置关系到目标实体
+     * @param t
+     */
     void setEntity(T t);
 }
