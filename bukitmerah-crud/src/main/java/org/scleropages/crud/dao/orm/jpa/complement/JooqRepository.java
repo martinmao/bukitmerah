@@ -424,7 +424,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @param name
      * @return
      */
-    default Field<T> dslField(String name) {
+    default Field dslField(String name) {
         return dslTable().field(name);
     }
 
@@ -452,10 +452,10 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      *
      * @param type
      * @param qualifiedNames
-     * @param <T>
+     * @param <F>
      * @return
      */
-    default <T> Field<T> dslNameToField(Class<T> type, String... qualifiedNames) {
+    default <F> Field<F> dslNameToField(Class<F> type, String... qualifiedNames) {
         return field(name(qualifiedNames), type);
     }
 
@@ -485,7 +485,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @param qualifiedNames
      * @return
      */
-    default Field<T> dslNameToField(Table table, String fieldName, Class<T> fieldType) {
+    default <F> Field<F> dslNameToField(Table table, String fieldName, Class<F> fieldType) {
         return dslNameToField(fieldType, table.getName(), fieldName);
     }
 

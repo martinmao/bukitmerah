@@ -59,7 +59,13 @@ public interface ModelMapper<T, M> {
      * @param entity
      * @return
      */
-    default boolean isEntityInitialized(Object entity) {
-        return (null != entity && Hibernate.isInitialized(entity));
+    default boolean isEntityInitialized(Object... entity) {
+        if (null == entity)
+            return true;
+        for (Object o : entity) {
+            if (!Hibernate.isInitialized(o))
+                return false;
+        }
+        return true;
     }
 }
