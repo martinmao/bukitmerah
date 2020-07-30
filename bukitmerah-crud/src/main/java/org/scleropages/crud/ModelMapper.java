@@ -61,7 +61,7 @@ public interface ModelMapper<T, M> {
      */
     default boolean isEntityInitialized(Object... entity) {
         if (null == entity)
-            return true;
+            return false;
         for (Object o : entity) {
             if (!Hibernate.isInitialized(o))
                 return false;
