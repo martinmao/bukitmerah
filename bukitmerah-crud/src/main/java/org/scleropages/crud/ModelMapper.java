@@ -15,6 +15,7 @@
  */
 package org.scleropages.crud;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.hibernate.Hibernate;
 import org.mapstruct.MapperConfig;
 import org.mapstruct.Mapping;
@@ -60,7 +61,7 @@ public interface ModelMapper<T, M> {
      * @return
      */
     default boolean isEntityInitialized(Object... entity) {
-        if (null == entity)
+        if (ArrayUtils.isEmpty(entity))
             return false;
         for (Object o : entity) {
             if (!Hibernate.isInitialized(o))
