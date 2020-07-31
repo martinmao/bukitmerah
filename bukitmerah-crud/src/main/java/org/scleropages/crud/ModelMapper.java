@@ -64,6 +64,8 @@ public interface ModelMapper<T, M> {
         if (ArrayUtils.isEmpty(entity))
             return false;
         for (Object o : entity) {
+            if (null == o)
+                return false;
             if (!Hibernate.isInitialized(o))
                 return false;
         }
