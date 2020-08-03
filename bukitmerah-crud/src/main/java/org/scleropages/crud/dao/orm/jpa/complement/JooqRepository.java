@@ -109,7 +109,11 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
             if (null != fieldAttribute) {
                 PersistentAttributeType persistentAttributeType = fieldAttribute.getPersistentAttributeType();
                 if (Objects.equals(persistentAttributeType, PersistentAttributeType.BASIC)) {
-                    Reflections2.invokeSet(targetEntity, fieldAttribute.getName(), dslGetEntityBasicAttributeValue(field, fieldValue));
+                    try {
+                        Reflections2.invokeSet(targetEntity, fieldAttribute.getName(), dslGetEntityBasicAttributeValue(field, fieldValue));
+                    } catch (ClassCastException ex) {
+                        throw new IllegalStateException("incompatible type from: " + field + " to entity property: " + fieldAttribute.getName() + ". you must overrides dslGetEntityBasicAttributeValue for type conversion.", ex);
+                    }
                 } else if (Objects.equals(persistentAttributeType, PersistentAttributeType.EMBEDDED)) {
                     dslMapAssociatedAttribute(targetEntity, field, fieldName, fieldValue, fieldAttribute);
                 }
@@ -151,7 +155,11 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
         ManagedTypeModel<Object> associatedTypeMode = JpaContexts.getManagedTypeModel(fieldAttribute.getJavaType());
         Attribute<Object, Object> associatedFieldAttribute = associatedTypeMode.attributeByDatabaseColumn(fieldName);
         if (null != associatedFieldAttribute)
-            Reflections2.invokeSet(targetEntity, fieldAttribute.getName() + "." + associatedFieldAttribute.getName(), dslGetEntityBasicAttributeValue(field, fieldValue));
+            try {
+                Reflections2.invokeSet(targetEntity, fieldAttribute.getName() + "." + associatedFieldAttribute.getName(), dslGetEntityBasicAttributeValue(field, fieldValue));
+            } catch (ClassCastException ex) {
+                throw new IllegalStateException("incompatible type from: " + field + " to entity property: " + fieldAttribute.getName() + ". you must overrides dslGetEntityBasicAttributeValue for type conversion.", ex);
+            }
     }
 
 
