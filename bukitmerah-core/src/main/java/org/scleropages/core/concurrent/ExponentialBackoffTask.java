@@ -24,7 +24,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * 任务失败或超时后，任务延期执行周期以固定倍数增长，直至增长到maxDelay时，不在发生变化，一旦任务执行正常，则重置初始delay
+ * 指数回退任务，任务失败或超时后，任务延期执行周期以固定倍数增长，直至增长到maxDelay时，不在发生变化，一旦任务执行正常，则重置初始delay
  *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
