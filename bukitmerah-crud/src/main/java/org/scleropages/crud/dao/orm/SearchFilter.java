@@ -99,6 +99,7 @@ public class SearchFilter {
          * eg: name->rabbit(name equals to 'rabbit')
          * eg: GTE_age->30(age >= 30)
          * eg: LIKE_OR_firstName_lastName->rabbit(first name or last name like 'rabbit')
+         * eg: IN_color->red,blue,green,black
          * eg: email->IS_NOT_NULL/IS_NULL(email is not null/is null). Can also be expressed as: NULL/NOTNULL_email->any value(must not be empty text.)
          * </pre>
          *
