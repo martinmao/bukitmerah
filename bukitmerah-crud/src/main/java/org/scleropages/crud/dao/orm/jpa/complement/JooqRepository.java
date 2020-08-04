@@ -180,7 +180,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
             if (persistentAttributeType == MANY_TO_ONE || persistentAttributeType == ONE_TO_ONE) {
                 if (JooqRepositoryLogger.logger.isDebugEnabled()) {
                     Attribute<Object, Long> attributeOfId = JpaContexts.getManagedTypeModel(fieldAttribute.getJavaType()).getAttributeOfId();
-                    JooqRepositoryLogger.logger.warn("too much table join. not support mapping for: {}.{} from entity: {}", innerName, attributeOfId.getName(), targetEntity.getClass().getSimpleName());
+                    JooqRepositoryLogger.logger.warn("not support mapping for: {}.{} from entity: {}", innerName, attributeOfId.getName(), targetEntity.getClass().getSimpleName());
                 }
                 return;
             }
