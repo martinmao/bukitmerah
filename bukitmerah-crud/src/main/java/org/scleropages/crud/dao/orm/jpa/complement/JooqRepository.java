@@ -74,7 +74,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      *     ONE_TO_ONE属性的目标实体必须为关系维护方，会创建关联实体对象并设置到目标属性（已经存在则直接设置）
      *     部分支持的规则：
      *     ONE_TO_MANY 无法将结果集中的记录进行合并绑定到一的一方，只能将目标实体（多的一方）进行MANY_TO_ONE设置.即目标实体必须为多的一方（且作为关系维护方）
-     *     客户端需自行实现结果集合并
+     *     客户端需自行实现结果集合并(去重)
      *     不支持的关系：
      *     MANY_TO_MANY
      *     ELEMENT_COLLECTION
@@ -104,7 +104,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
                 throw new IllegalArgumentException("field qualified name not contains table name: " + field.getQualifiedName());
             String tableName = qualifiedName[0];
             String fieldName = qualifiedName[1];
-            //先从目标实体中查看column对应的属性，其中 BASIC，EMBEDDED属性直接设置
+            //先从目标实体中查看column对应的属性，其中 BASIC，EMBEDDED, MANY_TO_ONE,ONE_TO_ONE 属性直接设置
             Attribute<?, Object> fieldAttribute = targetEntityModel.attributeByDatabaseColumn(fieldName);
             if (null != fieldAttribute) {
                 PersistentAttributeType persistentAttributeType = fieldAttribute.getPersistentAttributeType();
@@ -116,8 +116,15 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
                     }
                 } else if (Objects.equals(persistentAttributeType, PersistentAttributeType.EMBEDDED)) {
                     dslMapAssociatedAttribute(targetEntity, field, fieldName, fieldValue, fieldAttribute);
+                } else if (
+                        Objects.equals(persistentAttributeType, PersistentAttributeType.MANY_TO_ONE) ||
+                                Objects.equals(persistentAttributeType, PersistentAttributeType.ONE_TO_ONE)) {
+                    //many to one，one to one 作为关系维护方 引用的目标实体id
+                    String columnOfId = JpaContexts.getManagedTypeModel(fieldAttribute.getJavaType()).getColumnOfId();
+                    dslMapAssociatedAttribute(targetEntity, field, columnOfId, fieldValue, fieldAttribute);
                 }
-            } else {//如果column name对应的属性在目标实体中无法找到，则说明该column来源于其关联实体，从table进行实体发现并关联
+            } else {
+                //如果column name对应的属性在目标实体中无法找到，则说明该column来源于其关联实体，从table进行实体发现并关联
                 Attribute<?, Object> associatedAttribute = targetEntityModel.attributeByDatabaseTable(tableName);
                 Assert.notNull(associatedAttribute, "can not found attribute associated table: " + tableName + " from: " + targetEntityClass.getName());
                 Assert.isTrue(!associatedAttribute.isCollection(), "not support collection attribute from: " + associatedAttribute.getName() + " with field: " + field);
@@ -130,7 +137,8 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
     /**
      * overrides this method how to convert a record field value as entity basic property. by default nothing to do return directly.
      *
-     * @param value
+     * @param field
+     * @param jooqFieldValue
      * @return
      */
     default Object dslGetEntityBasicAttributeValue(Field field, Object jooqFieldValue) {
@@ -207,7 +215,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @param pageable
      * @param select
      * @param useCountWrapped
-     * @param <T>
+     * @param <E>
      * @return
      */
     default <E> Page<E> dslPage(List<E> content, Pageable pageable, Supplier<SelectQuery> select, boolean useCountWrapped) {
@@ -448,7 +456,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
     /**
      * create table by given qualifiedNames
      *
-     * @param qualifiedName
+     * @param qualifiedNames
      * @return
      */
     default Table dslNameToTable(String... qualifiedNames) {
@@ -480,7 +488,8 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
     /**
      * get field by given {@link Table} and field name
      *
-     * @param qualifiedNames
+     * @param table
+     * @param fieldName
      * @return
      */
     default Field dslNameToField(Table table, String fieldName) {
@@ -490,7 +499,10 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
     /**
      * get field by given {@link Table} and field name (type-safety.)
      *
-     * @param qualifiedNames
+     * @param table
+     * @param fieldName
+     * @param fieldType
+     * @param <F>
      * @return
      */
     default <F> Field<F> dslNameToField(Table table, String fieldName, Class<F> fieldType) {

@@ -177,7 +177,7 @@ public class JpaContexts {
     /**
      * return true if given object is instance of an entity type.
      *
-     * @param entityClass
+     * @param object
      * @return
      */
     public static boolean isEntity(Object object) {
@@ -199,6 +199,8 @@ public class JpaContexts {
 
         //used if current managedType is a entity type.
         private volatile String table;
+
+        private volatile String columnOfId;
 
         /**
          * defined a group of navigation map. search field metadata quickly.
@@ -285,12 +287,12 @@ public class JpaContexts {
         /**
          * return {@link Attribute} by given database table name.
          *
-         * @param columnName
+         * @param tableName
          * @param <Y>
          * @return
          */
         public <Y> Attribute<T, Y> attributeByDatabaseTable(String tableName) {
-            Assert.hasText(tableName,"not allowed empty table name.");
+            Assert.hasText(tableName, "not allowed empty table name.");
             return (Attribute<T, Y>) tableAttributes.get(tableName.toLowerCase());
         }
 
@@ -470,6 +472,14 @@ public class JpaContexts {
             return (PluralAttribute<T, Y, E>) pluralAttributes.get(name);
         }
 
+        /**
+         * return id column name.
+         *
+         * @return
+         */
+        public String getColumnOfId() {
+            return columnOfId;
+        }
 
         /**
          * 返回属性关联的表（仅单值关联属性以及关联集合元素属性对应的表名会被返回，其他情况返回null）
@@ -504,7 +514,8 @@ public class JpaContexts {
             Id id = findAnnotation(member, Id.class);
             if (null != id) {
                 Column column = findAnnotation(member, Column.class);
-                return new String[]{null != column ? column.name() : "id"};
+                columnOfId = null != column ? column.name() : "id";
+                return new String[]{columnOfId};
             }
             Column column = findAnnotation(member, Column.class);
             if (null != column)
