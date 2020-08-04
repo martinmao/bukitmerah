@@ -42,6 +42,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static javax.persistence.metamodel.Attribute.PersistentAttributeType.*;
 import static org.jooq.impl.DSL.*;
 
 /**
@@ -78,8 +79,12 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      *     不支持的关系：
      *     MANY_TO_MANY
      *     ELEMENT_COLLECTION
+     *     暂不支持两层(包括)以上的关联.
      * </pre>
-     * NOTE: map过程不进行类型转换而直接设置到目标属性，如遇到类型问题自行覆写{@link #dslGetEntityBasicAttributeValue(Field, Object)}
+     * NOTE:
+     * <pre>
+     *      map过程不进行类型转换而直接设置到目标属性，如遇到类型问题自行覆写{@link #dslGetEntityBasicAttributeValue(Field, Object)}
+     * </pre>
      *
      * @param sourceRecord
      * @param targetEntity
@@ -108,17 +113,19 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
             Attribute<?, Object> fieldAttribute = targetEntityModel.attributeByDatabaseColumn(fieldName);
             if (null != fieldAttribute) {
                 PersistentAttributeType persistentAttributeType = fieldAttribute.getPersistentAttributeType();
-                if (Objects.equals(persistentAttributeType, PersistentAttributeType.BASIC)) {
+                if (Objects.equals(persistentAttributeType, BASIC)) {
                     try {
-                        Reflections2.invokeSet(targetEntity, fieldAttribute.getName(), dslGetEntityBasicAttributeValue(field, fieldValue));
+                        Object value = dslGetEntityBasicAttributeValue(field, fieldValue);
+                        if (null != value)
+                            Reflections2.invokeSet(targetEntity, fieldAttribute.getName(), value);
                     } catch (ClassCastException ex) {
                         throw new IllegalStateException("incompatible type from: " + field + " to entity property: " + fieldAttribute.getName() + ". you must overrides dslGetEntityBasicAttributeValue for type conversion.", ex);
                     }
-                } else if (Objects.equals(persistentAttributeType, PersistentAttributeType.EMBEDDED)) {
+                } else if (Objects.equals(persistentAttributeType, EMBEDDED)) {
                     dslMapAssociatedAttribute(targetEntity, field, fieldName, fieldValue, fieldAttribute);
                 } else if (
-                        Objects.equals(persistentAttributeType, PersistentAttributeType.MANY_TO_ONE) ||
-                                Objects.equals(persistentAttributeType, PersistentAttributeType.ONE_TO_ONE)) {
+                        Objects.equals(persistentAttributeType, MANY_TO_ONE) ||
+                                Objects.equals(persistentAttributeType, ONE_TO_ONE)) {
                     //many to one，one to one 作为关系维护方 引用的目标实体id
                     String columnOfId = JpaContexts.getManagedTypeModel(fieldAttribute.getJavaType()).getColumnOfId();
                     dslMapAssociatedAttribute(targetEntity, field, columnOfId, fieldValue, fieldAttribute);
@@ -139,7 +146,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      *
      * @param field
      * @param jooqFieldValue
-     * @return
+     * @return null if no values to mapped.
      */
     default Object dslGetEntityBasicAttributeValue(Field field, Object jooqFieldValue) {
         return jooqFieldValue;
@@ -162,12 +169,22 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
             return;
         ManagedTypeModel<Object> associatedTypeMode = JpaContexts.getManagedTypeModel(fieldAttribute.getJavaType());
         Attribute<Object, Object> associatedFieldAttribute = associatedTypeMode.attributeByDatabaseColumn(fieldName);
-        if (null != associatedFieldAttribute)
+        if (null != associatedFieldAttribute) {
+            Object value = dslGetEntityBasicAttributeValue(field, fieldValue);
+            String innerName = associatedFieldAttribute.getName();
+            if (null == value)
+                return;
+            PersistentAttributeType persistentAttributeType = associatedFieldAttribute.getPersistentAttributeType();
+            if (persistentAttributeType == MANY_TO_ONE || persistentAttributeType == ONE_TO_ONE) {
+                String columnOfId = JpaContexts.getManagedTypeModel(fieldAttribute.getJavaType()).getColumnOfId();
+
+            }
             try {
-                Reflections2.invokeSet(targetEntity, fieldAttribute.getName() + "." + associatedFieldAttribute.getName(), dslGetEntityBasicAttributeValue(field, fieldValue));
+                Reflections2.invokeSet(targetEntity, fieldAttribute.getName() + "." + innerName, value);
             } catch (ClassCastException ex) {
                 throw new IllegalStateException("incompatible type from: " + field + " to entity property: " + fieldAttribute.getName() + ". you must overrides dslGetEntityBasicAttributeValue for type conversion.", ex);
             }
+        }
     }
 
 

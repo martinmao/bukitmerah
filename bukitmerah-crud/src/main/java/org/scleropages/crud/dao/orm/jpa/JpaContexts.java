@@ -200,6 +200,7 @@ public class JpaContexts {
         //used if current managedType is a entity type.
         private volatile String table;
 
+        private volatile Attribute<T, Long> attributeOfId;
         private volatile String columnOfId;
 
         /**
@@ -482,6 +483,14 @@ public class JpaContexts {
         }
 
         /**
+         * return id attribute
+         * @return
+         */
+        public Attribute<T, Long> getAttributeOfId() {
+            return attributeOfId;
+        }
+
+        /**
          * 返回属性关联的表（仅单值关联属性以及关联集合元素属性对应的表名会被返回，其他情况返回null）
          *
          * @param attribute
@@ -515,6 +524,7 @@ public class JpaContexts {
             if (null != id) {
                 Column column = findAnnotation(member, Column.class);
                 columnOfId = null != column ? column.name() : "id";
+                attributeOfId = attribute;
                 return new String[]{columnOfId};
             }
             Column column = findAnnotation(member, Column.class);
