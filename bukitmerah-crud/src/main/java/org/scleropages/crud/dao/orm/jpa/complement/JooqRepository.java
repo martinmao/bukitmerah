@@ -176,13 +176,13 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
                 return;
             PersistentAttributeType persistentAttributeType = associatedFieldAttribute.getPersistentAttributeType();
             if (persistentAttributeType == MANY_TO_ONE || persistentAttributeType == ONE_TO_ONE) {
-                String columnOfId = JpaContexts.getManagedTypeModel(fieldAttribute.getJavaType()).getColumnOfId();
-
+                Attribute<Object, Long> attributeOfId = JpaContexts.getManagedTypeModel(fieldAttribute.getJavaType()).getAttributeOfId();
+                innerName += "." + attributeOfId.getName();
             }
             try {
                 Reflections2.invokeSet(targetEntity, fieldAttribute.getName() + "." + innerName, value);
             } catch (ClassCastException ex) {
-                throw new IllegalStateException("incompatible type from: " + field + " to entity property: " + fieldAttribute.getName() + ". you must overrides dslGetEntityBasicAttributeValue for type conversion.", ex);
+                throw new IllegalStateException("incompatible type from: " + field + " to entity property: " + innerName + ". you must overrides dslGetEntityBasicAttributeValue for type conversion.", ex);
             }
         }
     }
