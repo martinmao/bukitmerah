@@ -26,6 +26,8 @@ import org.scleropages.crud.FrameworkContext;
 import org.scleropages.crud.dao.orm.SearchFilter;
 import org.scleropages.crud.dao.orm.jpa.JpaContexts;
 import org.scleropages.crud.dao.orm.jpa.JpaContexts.ManagedTypeModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.NoRepositoryBean;
@@ -176,8 +178,11 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
                 return;
             PersistentAttributeType persistentAttributeType = associatedFieldAttribute.getPersistentAttributeType();
             if (persistentAttributeType == MANY_TO_ONE || persistentAttributeType == ONE_TO_ONE) {
-                Attribute<Object, Long> attributeOfId = JpaContexts.getManagedTypeModel(fieldAttribute.getJavaType()).getAttributeOfId();
-                innerName += "." + attributeOfId.getName();
+                if (JooqRepositoryLogger.logger.isDebugEnabled()) {
+                    Attribute<Object, Long> attributeOfId = JpaContexts.getManagedTypeModel(fieldAttribute.getJavaType()).getAttributeOfId();
+                    JooqRepositoryLogger.logger.warn("too much table join. not support mapping for: {}.{} from entity: {}", innerName, attributeOfId.getName(), targetEntity.getClass().getSimpleName());
+                }
+                return;
             }
             try {
                 Reflections2.invokeSet(targetEntity, fieldAttribute.getName() + "." + innerName, value);
@@ -597,6 +602,11 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      */
     default Keyword dslKeyWord(String keyWord) {
         return DSL.keyword(keyWord);
+    }
+
+
+    abstract class JooqRepositoryLogger {
+        private static Logger logger = LoggerFactory.getLogger(JooqRepositoryLogger.class.getSimpleName());
     }
 
 
