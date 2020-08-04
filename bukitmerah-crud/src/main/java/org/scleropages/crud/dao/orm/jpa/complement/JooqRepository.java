@@ -606,7 +606,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
 
 
     abstract class JooqRepositoryLogger {
-        private static Logger logger = LoggerFactory.getLogger(JooqRepositoryLogger.class.getSimpleName());
+        private static Logger logger = LoggerFactory.getLogger(JooqRepositoryLogger.class.getName());
     }
 
 
