@@ -36,11 +36,10 @@ import org.springframework.util.Assert;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Attribute.PersistentAttributeType;
-import javax.persistence.metamodel.EntityType;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -67,80 +66,183 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
 
 
     /**
+     * SPI接口，在{@link #dslRecordInto(Record, Object, ReferenceEntityAssembler)}中使用
+     */
+    interface ReferenceEntityAssembler<X> {
+
+
+        /**
+         * 根据给定的表创建目标实体，并将依赖关系应用到目标实体<br>
+         * 默认情况下，将根据root entity中的依赖关系进行查找匹配的目标实体，仅支持单引用(one to one,many to one)创建映射，不支持集合属性（one to many）的映射<br>
+         *
+         * @param rootEntity      根实体
+         * @param rootEntityModel 根实体元数据模型
+         * @param table           表名
+         * @param record          数据记录
+         * @return 表对应的目标实体
+         */
+        default Object apply(X rootEntity, ManagedTypeModel<X> rootEntityModel, String table, Record record) {
+            return applyInternal(rootEntity, rootEntityModel, table, record);
+        }
+
+
+        /**
+         * 默认实现，不应该覆写该方法
+         *
+         * @param rootEntity
+         * @param rootEntityModel
+         * @param table
+         * @param record
+         * @return
+         */
+        default Object applyInternal(X rootEntity, ManagedTypeModel<X> rootEntityModel, String table, Record record) {
+            Attribute<?, Object> tableField = rootEntityModel.attributeByDatabaseTable(table);
+            Assert.notNull(tableField, () -> "no referenced(singular) table [" + table + "] found from entity: " + rootEntity.getClass());
+            Object o = Reflections2.newInstance(tableField.getJavaType());
+            Reflections2.invokeSet(rootEntity, tableField.getName(), o);
+            return o;
+        }
+
+
+        /**
+         * 扩展改类实现如何将引用持久化属性值(外键值)应用到目标实体,默认情况下创建关联实体，将外键值设置到目标实体关联实体的id属性上，并将关联实体与目标实体进行关联.
+         *
+         * @return
+         */
+        default void applyReferenceIdToTargetEntity(Object targetEntity, Attribute refAttribute, Field field, Object fieldValue) {
+            applyReferenceIdToTargetEntityInternal(targetEntity, refAttribute, field, fieldValue);
+        }
+
+        /**
+         * 默认实现，不应该覆写该方法
+         *
+         * @param targetEntity
+         * @param refAttribute
+         * @param field
+         * @param fieldValue
+         */
+        default void applyReferenceIdToTargetEntityInternal(Object targetEntity, Attribute refAttribute, Field field, Object fieldValue) {
+            if (null == fieldValue)
+                return;
+            Class targetReferencedEntityClazz = refAttribute.getJavaType();
+            Attribute targetReferencedEntityId = JpaContexts.getManagedTypeModel(targetReferencedEntityClazz).getAttributeOfId();
+            Object o = Reflections2.newInstance(targetReferencedEntityClazz);
+            Reflections2.invokeSet(o, targetReferencedEntityId.getName(), fieldValue);
+            Reflections2.invokeSet(targetEntity, refAttribute.getName(), o);
+        }
+
+
+    }
+
+
+    /**
      * map a jooq record to given entity.
-     * jOOQ默认record into entity,仅支持声明了@Column的属性.即basic field。当前自行实现map策略
+     * jOOQ默认record into entity,仅支持声明了@Column的属性.即basic field。该方法提供了更多的映射方案
      * <pre>
      *     支持的关系：
      *     BASIC属性直接设置到目标实体
      *     EMBEDDED属性会创建目标实体的关联实体对象并设置到目标属性
-     *     MANY_TO_ONE属性的目标实体必须为关系维护方，会创建关联实体对象并设置到目标属性（已经存在则直接设置）
-     *     ONE_TO_ONE属性的目标实体必须为关系维护方，会创建关联实体对象并设置到目标属性（已经存在则直接设置）
-     *     部分支持的规则：
-     *     ONE_TO_MANY 无法将结果集中的记录进行合并绑定到一的一方，只能将目标实体（多的一方）进行MANY_TO_ONE设置.即目标实体必须为多的一方（且作为关系维护方）
-     *     客户端需自行实现结果集合并(去重)
+     *     MANY_TO_ONE 属性的目标实体必须为关系维护方，会创建关联实体对象并设置到目标属性
+     *     ONE_TO_ONE 属性的目标实体必须为关系维护方，会创建关联实体对象并设置到目标属性
      *     不支持的关系：
+     *     ONE_TO_MANY
      *     MANY_TO_MANY
      *     ELEMENT_COLLECTION
-     *     暂不支持两层(包括)以上的关联.
      * </pre>
      * NOTE:
      * <pre>
      *      map过程不进行类型转换而直接设置到目标属性，如遇到类型问题自行覆写{@link #dslGetEntityBasicAttributeValue(Field, Object)}
+     *      默认不支持两层(包括)以上的关联（仅会处理与root entity关联类型）.多层次关系映射策略可以通过 referenceEntityAssembler 进行指定
      * </pre>
      *
      * @param sourceRecord
-     * @param targetEntity
+     * @param rootEntity
+     * @param referenceEntityAssembler
+     * @param <X>
      */
-    default <X> X dslRecordInto(Record sourceRecord, X targetEntity) {
-
+    default <X> void dslRecordInto(Record sourceRecord, X rootEntity, ReferenceEntityAssembler referenceEntityAssembler) {
         Assert.notNull(sourceRecord, "sourceRecord must not be null.");
-        Assert.notNull(targetEntity, "targetEntity must not be null.");
-        //sourceRecord.into(targetEntity); Only the javax.persistence.Column annotation is used and understood for jOOQ.
+        Assert.notNull(rootEntity, "targetEntity must not be null.");
+        Assert.notNull(referenceEntityAssembler, "referenceEntityAssembler must not be null.");
+        Assert.isTrue(JpaContexts.isEntity(rootEntity), "not a entity instance: " + rootEntity);
 
-        Class<?> targetEntityClass = targetEntity.getClass();
-        Assert.isTrue(JpaContexts.isEntity(targetEntity), "not a entity instance: " + targetEntity);
-        ManagedTypeModel<?> targetEntityModel = JpaContexts.getManagedTypeModel(targetEntityClass);
-        Map<String, EntityType> tableEntityTypes = JpaContexts.databaseTableEntityTypes();
+        Class rootEntityClazz = rootEntity.getClass();
+
+        ManagedTypeModel<?> rootEntityModel = JpaContexts.getManagedTypeModel(rootEntityClazz);
+
+        Map<String, Object> tableToEntity = Maps.newHashMap();//table name map to entity instance.
 
         Stream.of(sourceRecord.fields()).forEach(field -> {
-            Object fieldValue = field.getValue(sourceRecord);
-            if (null == fieldValue)//null value always not mapped.
+            Object value = field.getValue(sourceRecord);
+            if (null == value)
                 return;
             String[] qualifiedName = field.getQualifiedName().getName();
-            if (qualifiedName.length < 2)
-                throw new IllegalArgumentException("field qualified name not contains table name: " + field.getQualifiedName());
+            Assert.isTrue(qualifiedName.length == 2, () -> "invalid field qualified name [" + Arrays.toString(qualifiedName) + "]. required format: '<TABLE_NAME>.<FIELD_NAME>'. ");
             String tableName = qualifiedName[0];
             String fieldName = qualifiedName[1];
-            //先从目标实体中查看column对应的属性，其中 BASIC，EMBEDDED, MANY_TO_ONE,ONE_TO_ONE 属性直接设置
-            Attribute<?, Object> fieldAttribute = targetEntityModel.attributeByDatabaseColumn(fieldName);
-            if (null != fieldAttribute) {
-                PersistentAttributeType persistentAttributeType = fieldAttribute.getPersistentAttributeType();
-                if (Objects.equals(persistentAttributeType, BASIC)) {
-                    try {
-                        Object value = dslGetEntityBasicAttributeValue(field, fieldValue);
-                        if (null != value)
-                            Reflections2.invokeSet(targetEntity, fieldAttribute.getName(), value);
-                    } catch (ClassCastException ex) {
-                        throw new IllegalStateException("incompatible type from: " + field + " to entity property: " + fieldAttribute.getName() + ". you must overrides dslGetEntityBasicAttributeValue for type conversion.", ex);
-                    }
-                } else if (Objects.equals(persistentAttributeType, EMBEDDED)) {
-                    dslMapAssociatedAttribute(targetEntity, field, fieldName, fieldValue, fieldAttribute);
-                } else if (
-                        Objects.equals(persistentAttributeType, MANY_TO_ONE) ||
-                                Objects.equals(persistentAttributeType, ONE_TO_ONE)) {
-                    //many to one，one to one 作为关系维护方 引用的目标实体id
-                    String columnOfId = JpaContexts.getManagedTypeModel(fieldAttribute.getJavaType()).getColumnOfId();
-                    dslMapAssociatedAttribute(targetEntity, field, columnOfId, fieldValue, fieldAttribute);
+            Object targetEntity = tableToEntity.computeIfAbsent(tableName, k -> {
+                if (k.equalsIgnoreCase(rootEntityModel.table())) {
+                    return rootEntity;
                 }
+                Object apply = referenceEntityAssembler.apply(rootEntity, rootEntityModel, k, sourceRecord);
+                Assert.notNull(apply, "referenceEntityAssembler eval result must not be null for table: " + k);
+                return apply;
+            });
+            Class<?> targetEntityClazz = targetEntity.getClass();
+            ManagedTypeModel<?> entityModel = JpaContexts.getManagedTypeModel(targetEntityClazz);
+            Attribute<?, Object> columnAttribute = entityModel.attributeByDatabaseColumn(fieldName);
+            Assert.notNull(columnAttribute, () -> "no entity attribute(singular) found by column: " + fieldName + " from entity: " + targetEntityClazz);
+            PersistentAttributeType persistentType = columnAttribute.getPersistentAttributeType();
+            if (persistentType == BASIC) {
+                populateBasicFieldValueToEntity(field, value, targetEntity, columnAttribute);
+            } else if (persistentType == EMBEDDED) {
+                dslMapEmbeddedAttribute(targetEntity, field, fieldName, value, columnAttribute);
+            } else if (persistentType == MANY_TO_ONE || persistentType == ONE_TO_ONE) {
+                referenceEntityAssembler.applyReferenceIdToTargetEntity(targetEntity, columnAttribute, field, value);
             } else {
-                //如果column name对应的属性在目标实体中无法找到，则说明该column来源于其关联实体，从table进行实体发现并关联
-                Attribute<?, Object> associatedAttribute = targetEntityModel.attributeByDatabaseTable(tableName);
-                Assert.notNull(associatedAttribute, "can not found attribute associated table: " + tableName + " from: " + targetEntityClass.getName());
-                Assert.isTrue(!associatedAttribute.isCollection(), "not support collection attribute from: " + associatedAttribute.getName() + " with field: " + field);
-                dslMapAssociatedAttribute(targetEntity, field, fieldName, fieldValue, associatedAttribute);
+                JooqRepositoryUtil.logger.warn("not support mapping for {} to entity: {}", Arrays.toString(qualifiedName), targetEntity.getClass().getSimpleName());
             }
         });
-        return targetEntity;
+    }
+
+    /**
+     * map a jooq record to given entity.
+     * jOOQ默认record into entity,仅支持声明了@Column的属性.即basic field。该方法提供了更多的映射方案
+     * <pre>
+     *     支持的关系：
+     *     BASIC属性直接设置到目标实体
+     *     EMBEDDED属性会创建目标实体的关联实体对象并设置到目标属性
+     *     MANY_TO_ONE 属性的目标实体必须为关系维护方，会创建关联实体对象并设置到目标属性
+     *     ONE_TO_ONE 属性的目标实体必须为关系维护方，会创建关联实体对象并设置到目标属性
+     *     不支持的关系：
+     *     ONE_TO_MANY
+     *     MANY_TO_MANY
+     *     ELEMENT_COLLECTION
+     * </pre>
+     * NOTE:
+     * <pre>
+     *      map过程不进行类型转换而直接设置到目标属性，如遇到类型问题自行覆写{@link #dslGetEntityBasicAttributeValue(Field, Object)}
+     *      默认不支持两层(包括)以上的关联（仅会处理与root entity关联类型）.多层次关系映射策略可以通过 referenceEntityAssembler 进行指定.参考方法： {@link #dslRecordInto(Record, Object, ReferenceEntityAssembler)}
+     * </pre>
+     *
+     * @param sourceRecord
+     * @param rootEntity
+     * @param <X>
+     */
+    default <X> void dslRecordInto(Record sourceRecord, X rootEntity) {
+        dslRecordInto(sourceRecord, rootEntity, JooqRepositoryUtil.DEFAULT_REFERENCE_ENTITY_ASSEMBLER);
+    }
+
+
+    default void populateBasicFieldValueToEntity(Field field, Object fieldValue, Object targetEntity, Attribute fieldAttribute) {
+        try {
+            Object value = dslGetEntityBasicAttributeValue(field, fieldValue);
+            if (null == value)
+                return;
+            Reflections2.invokeSet(targetEntity, fieldAttribute.getName(), value);
+        } catch (ClassCastException ex) {
+            throw new IllegalStateException("incompatible type from: " + field + " to entity property: " + fieldAttribute.getName() + ". you must overrides dslGetEntityBasicAttributeValue for type conversion.", ex);
+        }
     }
 
     /**
@@ -166,24 +268,14 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @param fieldValue
      * @param fieldAttribute
      */
-    default void dslMapAssociatedAttribute(Object targetEntity, Field field, String fieldName, Object fieldValue, Attribute<?, Object> fieldAttribute) {
-        if (null == fieldValue)
+    default void dslMapEmbeddedAttribute(Object targetEntity, Field field, String fieldName, Object fieldValue, Attribute<?, Object> fieldAttribute) {
+        Object value = dslGetEntityBasicAttributeValue(field, fieldValue);
+        if (null == value)
             return;
         ManagedTypeModel<Object> associatedTypeMode = JpaContexts.getManagedTypeModel(fieldAttribute.getJavaType());
         Attribute<Object, Object> associatedFieldAttribute = associatedTypeMode.attributeByDatabaseColumn(fieldName);
         if (null != associatedFieldAttribute) {
-            Object value = dslGetEntityBasicAttributeValue(field, fieldValue);
             String innerName = associatedFieldAttribute.getName();
-            if (null == value)
-                return;
-            PersistentAttributeType persistentAttributeType = associatedFieldAttribute.getPersistentAttributeType();
-            if (persistentAttributeType == MANY_TO_ONE || persistentAttributeType == ONE_TO_ONE) {
-                if (JooqRepositoryLogger.logger.isDebugEnabled()) {
-                    Attribute<Object, Long> attributeOfId = JpaContexts.getManagedTypeModel(fieldAttribute.getJavaType()).getAttributeOfId();
-                    JooqRepositoryLogger.logger.warn("not support mapping for: {}.{} from entity: {}", innerName, attributeOfId.getName(), targetEntity.getClass().getSimpleName());
-                }
-                return;
-            }
             try {
                 Reflections2.invokeSet(targetEntity, fieldAttribute.getName() + "." + innerName, value);
             } catch (ClassCastException ex) {
@@ -605,8 +697,10 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
     }
 
 
-    abstract class JooqRepositoryLogger {
-        private static Logger logger = LoggerFactory.getLogger(JooqRepositoryLogger.class.getName());
+    abstract class JooqRepositoryUtil {
+        private static Logger logger = LoggerFactory.getLogger(JooqRepository.class.getName());
+        private static final ReferenceEntityAssembler DEFAULT_REFERENCE_ENTITY_ASSEMBLER = new ReferenceEntityAssembler() {
+        };
     }
 
 
