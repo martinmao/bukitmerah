@@ -16,13 +16,19 @@
 package org.scleropages.crud.dao.orm.jpa.hibernate;
 
 import org.hibernate.EmptyInterceptor;
+import org.hibernate.type.Type;
+
+import java.io.Serializable;
 
 /**
- *
  * common interceptor for hibernate crud operations...
+ *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
  */
 public class GenericHibernateInterceptor extends EmptyInterceptor {
 
-
+    @Override
+    public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
+        return super.onSave(entity, id, state, propertyNames, types);
+    }
 }
