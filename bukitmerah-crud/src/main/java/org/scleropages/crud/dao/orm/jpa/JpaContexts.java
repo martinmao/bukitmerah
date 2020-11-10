@@ -119,6 +119,7 @@ public class JpaContexts {
      * @return
      */
     public static <T> ManagedType<T> getManagedType(Class<T> typeClass) {
+        Assert.notNull(typeClass, "typeClass is required.");
         return getRequiredEntityManagerFactory().getMetamodel().managedType(typeClass);
     }
 
@@ -235,9 +236,7 @@ public class JpaContexts {
         private final Map<Attribute, Map<Class, Annotation>> attributeAnnotations;
 
 
-        private ManagedTypeModel(Class<T> typeClass) {
-            Assert.notNull(typeClass, "typeClass is required.");
-            managedType = getManagedType(typeClass);
+        private ManagedTypeModel(ManagedType<T> managedType) {
             Map<String, Attribute<T, ?>> attributes = Maps.newHashMap();
             Map<String, SingularAttribute<T, ?>> singularAttributes = Maps.newHashMap();
             Map<String, SingularAttribute<T, ?>> singularReferencedAttributes = Maps.newHashMap();
@@ -263,7 +262,7 @@ public class JpaContexts {
                 }
                 String[] columnsFromAttribute = obtainDatabaseColumnsFromAttribute(attr);
                 Stream.of(columnsFromAttribute).forEach(column -> {
-                    Assert.isNull(columnAttributes.putIfAbsent(column.toLowerCase(), (Attribute<T, ?>) attr), "duplicate column name found: " + column + " from: " + typeClass);
+                    Assert.isNull(columnAttributes.putIfAbsent(column.toLowerCase(), (Attribute<T, ?>) attr), "duplicate column name found: " + column + " from: " + managedType.getJavaType());
                 });
                 attributeColumns.put((Attribute<T, ?>) attr, columnsFromAttribute);
                 String table = obtainDatabaseTableFromAttribute(attr);
@@ -279,6 +278,12 @@ public class JpaContexts {
             this.attributeColumns = Collections.unmodifiableMap(attributeColumns);
             this.tableAttributes = Collections.unmodifiableMap(tableAttributes);
             this.attributeAnnotations = Maps.newConcurrentMap();
+            this.managedType = managedType;
+        }
+
+
+        private ManagedTypeModel(Class<T> typeClass) {
+            this(getManagedType(typeClass));
         }
 
 
