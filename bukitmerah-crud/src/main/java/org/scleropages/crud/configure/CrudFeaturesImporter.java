@@ -26,6 +26,7 @@ import com.google.common.collect.Maps;
 import org.scleropages.core.mapper.JsonMapper2;
 import org.scleropages.crud.FrameworkContext;
 import org.scleropages.crud.dao.orm.PageableBuilder;
+import org.scleropages.crud.dao.orm.jpa.JpaContexts;
 import org.scleropages.crud.dao.orm.jpa.hibernate.GenericHibernateCustomizer;
 import org.scleropages.crud.web.WebSearchFilterArgumentResolver;
 import org.slf4j.Logger;
@@ -106,6 +107,7 @@ public class CrudFeaturesImporter implements ApplicationListener<ContextRefreshe
         applicationContext.getBeanProvider(JacksonProperties.class).ifAvailable(jacksonProperties -> {
             applyJacksonConfigureToFastJson(jacksonProperties);
         });
+        JpaContexts.databaseTableEntityTypes();
     }
 
     private void applyJacksonConfigureToFastJson(JacksonProperties jacksonProperties) {
