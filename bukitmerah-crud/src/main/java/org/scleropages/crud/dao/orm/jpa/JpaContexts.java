@@ -225,6 +225,11 @@ public class JpaContexts {
         private final Map<String, Attribute<T, ?>> columnAttributes;
 
         /**
+         * attribute->column name({@link Column#name()} or {@link JoinColumn#name()} or {@link AttributeOverride#name()}...)
+         */
+        private final Map<Attribute<T, ?>, String[]> attributeColumns;
+
+        /**
          * attribute->{annotation Class->annotation instance}
          */
         private final Map<Attribute, Map<Class, Annotation>> attributeAnnotations;
@@ -239,6 +244,7 @@ public class JpaContexts {
             Map<String, SingularAttribute<T, ?>> singularBasicAttributes = Maps.newHashMap();
             Map<String, PluralAttribute<T, ?, ?>> pluralAttributes = Maps.newHashMap();
             Map<String, Attribute<T, ?>> columnAttributes = Maps.newHashMap();
+            Map<Attribute<T, ?>, String[]> attributeColumns = Maps.newHashMap();
             Map<String, Attribute<T, ?>> tableAttributes = Maps.newHashMap();
             managedType.getAttributes().forEach(attr -> {
                 String attrName = attr.getName();
@@ -255,9 +261,11 @@ public class JpaContexts {
                 if (attr.isCollection() && attr instanceof PluralAttribute) {
                     pluralAttributes.put(attrName, (PluralAttribute<T, ?, ?>) attr);
                 }
-                Stream.of(obtainDatabaseColumnsFromAttribute(attr)).forEach(column -> {
+                String[] columnsFromAttribute = obtainDatabaseColumnsFromAttribute(attr);
+                Stream.of(columnsFromAttribute).forEach(column -> {
                     Assert.isNull(columnAttributes.putIfAbsent(column.toLowerCase(), (Attribute<T, ?>) attr), "duplicate column name found: " + column + " from: " + typeClass);
                 });
+                attributeColumns.put((Attribute<T, ?>) attr, columnsFromAttribute);
                 String table = obtainDatabaseTableFromAttribute(attr);
                 if (StringUtils.hasText(table))
                     tableAttributes.put(table.toLowerCase(), (Attribute<T, ?>) attr);
@@ -268,6 +276,7 @@ public class JpaContexts {
             this.singularBasicAttributes = Collections.unmodifiableMap(singularBasicAttributes);
             this.pluralAttributes = Collections.unmodifiableMap(pluralAttributes);
             this.columnAttributes = Collections.unmodifiableMap(columnAttributes);
+            this.attributeColumns = Collections.unmodifiableMap(attributeColumns);
             this.tableAttributes = Collections.unmodifiableMap(tableAttributes);
             this.attributeAnnotations = Maps.newConcurrentMap();
         }
@@ -283,6 +292,17 @@ public class JpaContexts {
         public <Y> Attribute<T, Y> attributeByDatabaseColumn(String columnName) {
             Assert.hasText(columnName, "not allowed empty column name.");
             return (Attribute<T, Y>) columnAttributes.get(columnName.toLowerCase());
+        }
+
+        /**
+         * return columns by given attribute.会有多个column 返回的情况，例如 {@link Embedded} 属性 会关联一组column
+         *
+         * @param attribute
+         * @return
+         */
+        public String[] databaseColumnByAttribute(Attribute attribute) {
+            Assert.notNull(attribute, "attribute must not be null.");
+            return attributeColumns.get(attribute);
         }
 
         /**
@@ -484,6 +504,7 @@ public class JpaContexts {
 
         /**
          * return id attribute
+         *
          * @return
          */
         public Attribute<T, Long> getAttributeOfId() {
