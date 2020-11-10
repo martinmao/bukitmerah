@@ -383,9 +383,13 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
         Assert.notNull(select, "select must not be null.");
         Assert.notNull(select.get(), "select not supply.");
         Assert.notNull(searchFilter, "searchFilter must not be null.");
-        Condition condition = JpaSupportJooqConditions.bySearchFilters(select.get(), JpaContexts.getManagedTypeModel(GenericTypes.getClassGenericType(getClass(), JooqRepository.class, 2)), searchFilter.values());
+        Condition condition = JpaSupportJooqConditions.bySearchFilters(select.get(), JpaContexts.getManagedTypeModel(dslEntityType()), searchFilter.values());
         select.get().addConditions(condition);
         return dslPage(select, pageable, useCountWrapped, applySort);
+    }
+
+    default Class<E> dslEntityType() {
+        return GenericTypes.getClassGenericType(getClass(), JooqRepository.class, 2);
     }
 
 
