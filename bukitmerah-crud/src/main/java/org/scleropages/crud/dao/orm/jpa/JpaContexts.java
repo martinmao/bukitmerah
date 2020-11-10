@@ -131,6 +131,7 @@ public class JpaContexts {
      * @return
      */
     public static <T> ManagedTypeModel<T> getManagedTypeModel(Class<T> entityClass) {
+        Assert.notNull(entityClass, "entityClass must not be null.");
         return (ManagedTypeModel<T>) MANAGED_TYPE_MODELS.computeIfAbsent(entityClass, clazz -> new ManagedTypeModel(clazz));
     }
 
@@ -142,6 +143,7 @@ public class JpaContexts {
      * @return
      */
     public static <T> ManagedTypeModel<T> getManagedTypeModel(ManagedType<T> managedType) {
+        Assert.notNull(managedType, "managedType must not be null.");
         return (ManagedTypeModel<T>) MANAGED_TYPE_MODELS.computeIfAbsent(managedType.getJavaType(), clazz -> new ManagedTypeModel(managedType));
     }
 
@@ -153,7 +155,10 @@ public class JpaContexts {
      * @return
      */
     public static <T> ManagedTypeModel<T> getManagedTypeModel(String table) {
-        return getManagedTypeModel(databaseTableEntityTypes().get(table));
+        Assert.hasText(table, "table must not be empty.");
+        EntityType entityType = databaseTableEntityTypes().get(table);
+        Assert.notNull(entityType, "no entity type found by given table: " + table);
+        return getManagedTypeModel(entityType);
     }
 
 
