@@ -145,6 +145,17 @@ public class JpaContexts {
         return (ManagedTypeModel<T>) MANAGED_TYPE_MODELS.computeIfAbsent(managedType.getJavaType(), clazz -> new ManagedTypeModel(managedType));
     }
 
+    /**
+     * get required {@link ManagedTypeModel} by given table name.
+     *
+     * @param table
+     * @param <T>
+     * @return
+     */
+    public static <T> ManagedTypeModel<T> getManagedTypeModel(String table) {
+        return getManagedTypeModel(databaseTableEntityTypes().get(table));
+    }
+
 
     /**
      * get required embeddable metadata:{@link EmbeddableType} by given class.
