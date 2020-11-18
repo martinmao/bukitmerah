@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -74,6 +75,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
         /**
          * 根据给定的表创建目标实体，并将依赖关系应用到目标实体<br>
          * 默认情况下，将根据root entity中的依赖关系进行查找匹配的目标实体，仅支持单引用(one to one,many to one)创建映射，不支持集合属性（one to many）的映射<br>
+         * 如果不处理该表，返回null.
          *
          * @param rootEntity      根实体
          * @param rootEntityModel 根实体元数据模型
@@ -185,9 +187,14 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
                     return rootEntity;
                 }
                 Object apply = referenceEntityAssembler.apply(rootEntity, rootEntityModel, k, sourceRecord);
-                Assert.notNull(apply, "referenceEntityAssembler eval result must not be null for table: " + k);
+//                Assert.notNull(apply, "referenceEntityAssembler eval result must not be null for table: " + k);
+                if (null == apply)
+                    return StringUtils.EMPTY;
                 return apply;
             });
+            if (Objects.equals(targetEntity, StringUtils.EMPTY)) {
+                return;
+            }
             Class<?> targetEntityClazz = targetEntity.getClass();
             ManagedTypeModel<?> entityModel = JpaContexts.getManagedTypeModel(targetEntityClazz);
             Attribute<?, Object> columnAttribute = entityModel.attributeByDatabaseColumn(fieldName);
