@@ -27,11 +27,13 @@ import org.scleropages.core.mapper.JsonMapper2;
 import org.scleropages.crud.FrameworkContext;
 import org.scleropages.crud.dao.orm.PageableBuilder;
 import org.scleropages.crud.dao.orm.jpa.JpaContexts;
+import org.scleropages.crud.dao.orm.jpa.PageQueryPostProcessor;
 import org.scleropages.crud.dao.orm.jpa.hibernate.GenericHibernateCustomizer;
 import org.scleropages.crud.web.WebSearchFilterArgumentResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jackson.JacksonProperties;
 import org.springframework.cache.CacheManager;
@@ -45,6 +47,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.core.env.Environment;
 import org.springframework.data.web.config.PageableHandlerMethodArgumentResolverCustomizer;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -164,5 +167,14 @@ public class CrudFeaturesImporter implements ApplicationListener<ContextRefreshe
             pageableResolver.setSizeParameterName(PageableBuilder.PAGE_SIZE_PARAM_NAME);
             pageableResolver.setMaxPageSize(100);
         };
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public PageQueryPostProcessor pageQueryPostProcessor(Environment environment) {
+        PageQueryPostProcessor processor = new PageQueryPostProcessor();
+        boolean proxyTargetClass = environment.getProperty("spring.aop.proxy-target-class", Boolean.class, true);
+        processor.setProxyTargetClass(proxyTargetClass);
+        return processor;
     }
 }
