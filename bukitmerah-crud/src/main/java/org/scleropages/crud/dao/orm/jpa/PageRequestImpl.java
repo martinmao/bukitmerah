@@ -26,6 +26,7 @@ import java.beans.Transient;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * user code please don't use this class. use {@link Pages#serializablePageable(Pageable)} to create this for serialize.
@@ -35,13 +36,15 @@ import java.util.List;
  */
 public class PageRequestImpl extends PageRequest implements Pageable, Serializable {
 
+    private static final Pageable RECOVERABLE_PAGEABLE = PageRequest.of(1, 1);
+
     private int pageNoImpl = PageableBuilder.DEFAULT_PAGE_NO;
     private int pageSizeImpl = PageableBuilder.DEFAULT_PAGE_SIZE;
     private SortImpl sortImpl;
 
     private boolean unpagedImpl = false;
 
-    private Pageable nativePageRequest;
+    private Pageable nativePageRequest = RECOVERABLE_PAGEABLE;
 
 
     public PageRequestImpl(Pageable pageable) {
@@ -63,7 +66,7 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
         if (unpagedImpl) {
             return Pageable.unpaged();
         }
-        if (null == nativePageRequest) {
+        if (Objects.equals(RECOVERABLE_PAGEABLE, nativePageRequest)) {
             nativePageRequest = PageRequest.of(pageNoImpl, pageSizeImpl, sortImpl.recoverSortIfNecessary());
         }
         return nativePageRequest;
