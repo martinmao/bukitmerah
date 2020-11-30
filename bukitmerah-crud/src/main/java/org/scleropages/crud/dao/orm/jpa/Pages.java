@@ -17,6 +17,7 @@ package org.scleropages.crud.dao.orm.jpa;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
 
 /**
@@ -37,5 +38,17 @@ public abstract class Pages {
             return page;
         Assert.isInstanceOf(PageImpl.class, page, "given page must be standard spring page.");
         return new org.scleropages.crud.dao.orm.jpa.PageImpl((PageImpl) page);
+    }
+
+    /**
+     * create an serializable pageable.
+     *
+     * @return
+     */
+    public static Pageable serializablePageable(Pageable pageable) {
+        if (pageable instanceof PageRequestImpl) {
+            return pageable;
+        }
+        return new PageRequestImpl(pageable);
     }
 }
