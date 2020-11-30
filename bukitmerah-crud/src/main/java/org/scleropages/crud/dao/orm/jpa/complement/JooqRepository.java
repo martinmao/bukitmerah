@@ -432,7 +432,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
                 StringUtils.replace(splitByFirstFrom[0], "select", "select count(") + ")" :
                 "select count(*)";
         sql = countFragment + sql;
-        return Long.valueOf(dslContext().fetchOne(sql, bindValues.toArray(new Object[bindValues.size()])).get(0).toString());
+        return Long.valueOf(dslContext().fetchOne(sql, null != bindValues ? bindValues.toArray(new Object[bindValues.size()]) : null).get(0).toString());
     }
 
 
