@@ -17,6 +17,7 @@ package org.scleropages.crud.dao.orm.jpa;
 
 import com.google.common.collect.Lists;
 import org.scleropages.core.mapper.JsonMapper2;
+import org.scleropages.crud.dao.orm.PageableBuilder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -34,8 +35,8 @@ import java.util.List;
  */
 public class PageRequestImpl extends PageRequest implements Pageable, Serializable {
 
-    private int pageNoImpl=1;
-    private int pageSizeImpl=20;
+    private int pageNoImpl = PageableBuilder.DEFAULT_PAGE_NO;
+    private int pageSizeImpl = PageableBuilder.DEFAULT_PAGE_SIZE;
     private SortImpl sortImpl;
 
     private boolean unpagedImpl = false;
@@ -387,7 +388,7 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
 //        Pageable sp = Pageable.unpaged();
 //        Pageable sp = PageRequest.of(1, 15);
 //        PageRequest sp = PageRequest.of(1, 15, Sort.by(Sort.Order.asc("a"), Sort.Order.desc("b")));
-        PageRequest sp = PageRequest.of(1,15, Sort.Direction.DESC,"a","b","c");
+        PageRequest sp = PageRequest.of(1, 15, Sort.Direction.DESC, "a", "b", "c");
 
         Pageable lp = Pages.serializablePageable(sp);
         String text = JsonMapper2.toJson(lp);

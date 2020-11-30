@@ -23,7 +23,10 @@ import org.springframework.util.CollectionUtils;
 import java.util.Map;
 
 /**
+ * use spring mvc data binding instead {@link org.springframework.data.web.PageableHandlerMethodArgumentResolver}.
+ *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
+ *
  */
 public abstract class PageableBuilder {
 
