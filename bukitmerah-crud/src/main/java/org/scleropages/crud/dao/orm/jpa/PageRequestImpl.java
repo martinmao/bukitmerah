@@ -28,7 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * user code please don't ues this class. use {@link Pages#serializablePageable(Pageable)} to create this for serialize.
+ * user code please don't use this class. use {@link Pages#serializablePageable(Pageable)} to create this for serialize.
  * this class don't validate arguments.
  *
  * @author <a href="mailto:martinmao@icloud.com">Martin Mao</a>
