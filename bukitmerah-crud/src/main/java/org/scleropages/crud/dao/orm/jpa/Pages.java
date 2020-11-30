@@ -41,7 +41,7 @@ public abstract class Pages {
     }
 
     /**
-     * create an serializable pageable.
+     * create an serializable pageable for rpc request.
      *
      * @return
      */
