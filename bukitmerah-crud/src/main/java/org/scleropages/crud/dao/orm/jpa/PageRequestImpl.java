@@ -387,12 +387,15 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
     }
 
     public static void main(String[] args) {
-//        Pageable sp = PageRequest.of(1, 15, Sort.Direction.DESC, "a", "b", "c", "d");
-//        Pageable sp = Pageable.unpaged();
-//        Pageable sp = PageRequest.of(1, 15);
-//        PageRequest sp = PageRequest.of(1, 15, Sort.by(Sort.Order.asc("a"), Sort.Order.desc("b")));
-        PageRequest sp = PageRequest.of(1, 15, Sort.Direction.DESC, "a", "b", "c");
+        testPage(PageRequest.of(1, 15, Sort.Direction.DESC, "a", "b", "c", "d"));
+        testPage(Pageable.unpaged());
+        testPage(PageRequest.of(1, 15));
+        testPage(PageRequest.of(1, 15, Sort.by(Sort.Order.asc("a"), Sort.Order.desc("b"))));
+        testPage(PageRequest.of(1,15,Sort.by("a","b","c")));
 
+    }
+
+    private static void testPage(Pageable sp){
         Pageable lp = Pages.serializablePageable(sp);
         String text = JsonMapper2.toJson(lp);
         System.out.println(text);
