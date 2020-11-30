@@ -46,7 +46,7 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
 
     private boolean unpagedImpl = false;
 
-    private Pageable nativePageRequest = RECOVERABLE_PAGEABLE;
+    private transient Pageable nativePageRequest = RECOVERABLE_PAGEABLE;
 
 
     public PageRequestImpl(Pageable pageable) {
@@ -79,7 +79,7 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
 
         private List<OrderImpl> orderImpls = Lists.newArrayList();
 
-        private Sort nativeSort = RECOVERABLE_SORT;
+        private transient Sort nativeSort = RECOVERABLE_SORT;
 
         public SortImpl() {
             super(null);
@@ -168,15 +168,6 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
         public void setOrderImpls(List<OrderImpl> orderImpls) {
             this.orderImpls = orderImpls;
         }
-
-        @Transient
-        public Sort getNativeSort() {
-            return nativeSort;
-        }
-
-        public void setNativeSort(Sort nativeSort) {
-            this.nativeSort = nativeSort;
-        }
     }
 
     public static class OrderImpl extends Sort.Order implements Serializable {
@@ -186,7 +177,7 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
         private boolean ignoreCase;
         private Sort.NullHandling nullHandling;
 
-        private Sort.Order nativeOrder = RECOVERABLE_ORDER;
+        private transient Sort.Order nativeOrder = RECOVERABLE_ORDER;
 
         public OrderImpl() {
             super(null, "dummy");
@@ -318,15 +309,6 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
         public void setNullHandling(Sort.NullHandling nullHandling) {
             this.nullHandling = nullHandling;
         }
-
-        @Transient
-        public Sort.Order getNativeOrder() {
-            return nativeOrder;
-        }
-
-        public void setNativeOrder(Sort.Order nativeOrder) {
-            this.nativeOrder = nativeOrder;
-        }
     }
 
     protected PageRequestImpl(int page, int size, Sort sort) {
@@ -402,15 +384,6 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
 
     public void setUnpagedImpl(boolean unpagedImpl) {
         this.unpagedImpl = unpagedImpl;
-    }
-
-    @Transient
-    public Pageable getNativePageRequest() {
-        return nativePageRequest;
-    }
-
-    public void setNativePageRequest(Pageable nativePageRequest) {
-        this.nativePageRequest = nativePageRequest;
     }
 
     public static void main(String[] args) {
