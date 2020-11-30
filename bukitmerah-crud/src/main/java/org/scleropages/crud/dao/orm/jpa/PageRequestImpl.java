@@ -34,8 +34,8 @@ import java.util.List;
  */
 public class PageRequestImpl extends PageRequest implements Pageable, Serializable {
 
-    private int pageNoImpl;
-    private int pageSizeImpl;
+    private int pageNoImpl=1;
+    private int pageSizeImpl=20;
     private SortImpl sortImpl;
 
     private boolean unpagedImpl = false;
