@@ -40,7 +40,6 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
 
     private boolean unpagedImpl = false;
 
-
     private Pageable nativePageRequest;
 
 

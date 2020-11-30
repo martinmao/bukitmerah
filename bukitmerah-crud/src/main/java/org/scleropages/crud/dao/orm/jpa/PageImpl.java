@@ -49,7 +49,7 @@ public class PageImpl<T> implements Page<T>, Serializable {
         Assert.notNull(page, "page must not be null.");
 
         this.content.addAll(page.getContent());
-        this.pageable = page.getPageable();
+        this.pageable = Pages.serializablePageable(page.getPageable());
         this.total = page.getTotalElements();
     }
 
