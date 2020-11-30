@@ -21,6 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+import java.beans.Transient;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -63,6 +64,7 @@ public class PageImpl<T> implements Page<T>, Serializable {
      * (non-Javadoc)
      * @see org.springframework.data.domain.Slice#getNumber()
      */
+    @Transient
     public int getNumber() {
         return pageable.isPaged() ? pageable.getPageNumber() : 0;
     }
@@ -71,6 +73,7 @@ public class PageImpl<T> implements Page<T>, Serializable {
      * (non-Javadoc)
      * @see org.springframework.data.domain.Slice#getSize()
      */
+    @Transient
     public int getSize() {
         return pageable.isPaged() ? pageable.getPageSize() : content.size();
     }
@@ -79,6 +82,7 @@ public class PageImpl<T> implements Page<T>, Serializable {
      * (non-Javadoc)
      * @see org.springframework.data.domain.Slice#getNumberOfElements()
      */
+    @Transient
     public int getNumberOfElements() {
         return content.size();
     }
@@ -95,6 +99,7 @@ public class PageImpl<T> implements Page<T>, Serializable {
      * (non-Javadoc)
      * @see org.springframework.data.domain.Slice#isFirst()
      */
+    @Transient
     public boolean isFirst() {
         return !hasPrevious();
     }
@@ -103,6 +108,7 @@ public class PageImpl<T> implements Page<T>, Serializable {
      * (non-Javadoc)
      * @see org.springframework.data.domain.Slice#isLast()
      */
+    @Transient
     public boolean isLast() {
         return !hasNext();
     }
@@ -149,6 +155,7 @@ public class PageImpl<T> implements Page<T>, Serializable {
      * @see org.springframework.data.domain.Slice#getSort()
      */
     @Override
+    @Transient
     public Sort getSort() {
         return pageable.getSort();
     }
@@ -176,12 +183,14 @@ public class PageImpl<T> implements Page<T>, Serializable {
 
 
     @Override
+    @Transient
     public int getTotalPages() {
         return getSize() == 0 ? 1 : (int) Math.ceil((double) total / (double) getSize());
 
     }
 
     @Override
+    @Transient
     public long getTotalElements() {
         return total;
     }
