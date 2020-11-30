@@ -37,6 +37,8 @@ import java.util.Objects;
 public class PageRequestImpl extends PageRequest implements Pageable, Serializable {
 
     private static final Pageable RECOVERABLE_PAGEABLE = PageRequest.of(1, 1);
+    private static final Sort RECOVERABLE_SORT = Sort.unsorted();
+    private static final Sort.Order RECOVERABLE_ORDER = Sort.Order.asc("dummy");
 
     private int pageNoImpl = PageableBuilder.DEFAULT_PAGE_NO;
     private int pageSizeImpl = PageableBuilder.DEFAULT_PAGE_SIZE;
@@ -77,7 +79,7 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
 
         private List<OrderImpl> orderImpls = Lists.newArrayList();
 
-        private Sort nativeSort;
+        private Sort nativeSort = RECOVERABLE_SORT;
 
         public SortImpl() {
             super(null);
@@ -91,7 +93,7 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
         }
 
         private Sort recoverSortIfNecessary() {
-            if (null == nativeSort) {
+            if (Objects.equals(RECOVERABLE_SORT, nativeSort)) {
                 List<Order> _orders = Lists.newArrayList();
                 orderImpls.forEach(orderImpl -> {
                     _orders.add(orderImpl.recoverOrderIfNecessary());
@@ -177,7 +179,7 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
         private boolean ignoreCase;
         private Sort.NullHandling nullHandling;
 
-        private Sort.Order nativeOrder;
+        private Sort.Order nativeOrder = RECOVERABLE_ORDER;
 
         public OrderImpl() {
             super(null, "dummy");
@@ -192,7 +194,7 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
         }
 
         private Sort.Order recoverOrderIfNecessary() {
-            if (null == nativeOrder) {
+            if (Objects.equals(RECOVERABLE_ORDER, nativeOrder)) {
                 nativeOrder = new Sort.Order(this.direction, this.property, this.nullHandling);
             }
             return nativeOrder;
@@ -391,11 +393,11 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
         testPage(Pageable.unpaged());
         testPage(PageRequest.of(1, 15));
         testPage(PageRequest.of(1, 15, Sort.by(Sort.Order.asc("a"), Sort.Order.desc("b"))));
-        testPage(PageRequest.of(1,15,Sort.by("a","b","c")));
+        testPage(PageRequest.of(1, 15, Sort.by("a", "b", "c")));
 
     }
 
-    private static void testPage(Pageable sp){
+    private static void testPage(Pageable sp) {
         Pageable lp = Pages.serializablePageable(sp);
         String text = JsonMapper2.toJson(lp);
         System.out.println(text);
