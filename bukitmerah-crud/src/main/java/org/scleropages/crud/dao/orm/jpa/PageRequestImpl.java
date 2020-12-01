@@ -356,13 +356,21 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
     @Override
     @Transient
     public int getPageNumber() {
-        return recoverPageableIfNecessary().getPageNumber();
+        Pageable pageable = recoverPageableIfNecessary();
+        if (pageable instanceof PageRequest) {
+            return recoverPageableIfNecessary().getPageNumber();
+        }
+        return -1;
     }
 
     @Override
     @Transient
     public long getOffset() {
-        return recoverPageableIfNecessary().getOffset();
+        Pageable pageable = recoverPageableIfNecessary();
+        if (pageable instanceof PageRequest) {
+            return recoverPageableIfNecessary().getOffset();
+        }
+        return -1;
     }
 
     @Override
@@ -431,7 +439,11 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
     @Override
     @Transient
     public int getPageSize() {
-        return recoverPageableIfNecessary().getPageSize();
+        Pageable pageable = recoverPageableIfNecessary();
+        if (pageable instanceof PageRequest) {
+            return recoverPageableIfNecessary().getPageSize();
+        }
+        return -1;
     }
 
     public static void main(String[] args) {
