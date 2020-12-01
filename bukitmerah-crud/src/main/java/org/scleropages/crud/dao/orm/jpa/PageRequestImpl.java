@@ -61,7 +61,7 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
     }
 
     public PageRequestImpl() {
-        super(1, 1, Sort.unsorted());
+        this(RECOVERABLE_PAGEABLE);
     }
 
     private Pageable recoverPageableIfNecessary() {
@@ -82,7 +82,7 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
         private transient Sort nativeSort = RECOVERABLE_SORT;
 
         public SortImpl() {
-            super(null);
+            this(RECOVERABLE_SORT);
         }
 
         public SortImpl(Sort sort) {
@@ -180,7 +180,7 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
         private transient Sort.Order nativeOrder = RECOVERABLE_ORDER;
 
         public OrderImpl() {
-            super(null, "dummy");
+            this(RECOVERABLE_ORDER);
         }
 
         public OrderImpl(Sort.Order nativeOrder) {
@@ -386,6 +386,35 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
         this.unpagedImpl = unpagedImpl;
     }
 
+
+    @Override
+    @Transient
+    public int getPageSize() {
+        return super.getPageSize();
+    }
+
+    @Override
+    @Transient
+    public int getPageNumber() {
+        return super.getPageNumber();
+    }
+
+    @Override
+    @Transient
+    public long getOffset() {
+        return super.getOffset();
+    }
+
+    @Override
+    public boolean hasPrevious() {
+        return super.hasPrevious();
+    }
+
+    @Override
+    public Pageable previousOrFirst() {
+        return super.previousOrFirst();
+    }
+
     public static void main(String[] args) {
         testPage(PageRequest.of(1, 15, Sort.Direction.DESC, "a", "b", "c", "d"));
         testPage(Pageable.unpaged());
@@ -398,7 +427,7 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
     private static void testPage(Pageable sp) {
         Pageable lp = Pages.serializablePageable(sp);
         String text = JsonMapper2.toJson(lp);
-        System.out.println(text);
+//        System.out.println(text);
         Pageable rlp = JsonMapper2.fromJson(text, PageRequestImpl.class);
         System.out.println(rlp);
     }

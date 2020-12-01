@@ -75,7 +75,7 @@ public abstract class JpaSupportJooqConditions {
         Assert.notNull(root, "given root of ManagedTypeModel must not be null.");
         Assert.isTrue(root.isEntityType(), "given ManagedTypeModel not an instance of EntityType: " + root.managedType().getJavaType());
         if (Collections3.isEmpty(filters)) {
-            return trueCondition();
+            return noCondition();
         }
         List<Condition> allConditions = Lists.newArrayList();
         for (SearchFilter filter : filters) {
