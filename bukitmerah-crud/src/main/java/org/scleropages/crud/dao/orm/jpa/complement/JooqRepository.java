@@ -335,12 +335,25 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      * @param content
      * @param pageable
      * @param select
-     * @param useCountWrapped
      * @param <E>
      * @return
      */
-    default <E> Page<E> dslPage(List<E> content, Pageable pageable, Supplier<SelectQuery> select, boolean useCountWrapped) {
-        return PageableExecutionUtils.getPage(content, pageable, () -> dslCountQuery(select, useCountWrapped));
+    default <E> Page<E> dslPage(List<E> content, Pageable pageable, Supplier<SelectQuery> select) {
+        return PageableExecutionUtils.getPage(content, pageable, () -> dslCountQuery(select, true));
+    }
+
+
+    /**
+     * Create spring data {@link Page} by given content(any query result).
+     *
+     * @param content
+     * @param pageable
+     * @param count
+     * @param <E>
+     * @return
+     */
+    default <E> Page<E> dslPage(List<E> content, Pageable pageable, Long count) {
+        return PageableExecutionUtils.getPage(content, pageable, () -> count);
     }
 
 
@@ -370,10 +383,14 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      */
     default Page<? extends Record> dslPage(Supplier<SelectQuery> select, Pageable pageable, boolean useCountWrapped, boolean applySort) {
         SelectQuery<Record> selectQuery = select.get();
-        String countSql = selectQuery.getSQL();//sql for count query.
-        List<Object> bindValues = selectQuery.getBindValues();//bind values for count query.
+        if (!useCountWrapped) {
+            String countSql = selectQuery.getSQL();//sql for count query.
+            List<Object> bindValues = selectQuery.getBindValues();//bind values for count query.
+            dslPageable(select, pageable, applySort);//apply spring data pageable to source query.
+            return dslPage(select.get().fetch(), pageable, dslCountQuery(countSql, bindValues));
+        }
         dslPageable(select, pageable, applySort);//apply spring data pageable to source query.
-        return dslPage(select.get().fetch(), pageable, select, useCountWrapped);
+        return dslPage(select.get().fetch(), pageable, select);
     }
 
 
