@@ -342,21 +342,6 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
         return PageableExecutionUtils.getPage(content, pageable, () -> dslCountQuery(select, true));
     }
 
-
-    /**
-     * Create spring data {@link Page} by given content(any query result).
-     *
-     * @param content
-     * @param pageable
-     * @param count
-     * @param <E>
-     * @return
-     */
-    default <E> Page<E> dslPage(List<E> content, Pageable pageable, Long count) {
-        return PageableExecutionUtils.getPage(content, pageable, () -> count);
-    }
-
-
     /**
      * Create spring data {@link Page} by given content(any query result).
      *
@@ -387,7 +372,7 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
             String countSql = selectQuery.getSQL();//sql for count query.
             List<Object> bindValues = selectQuery.getBindValues();//bind values for count query.
             dslPageable(select, pageable, applySort);//apply spring data pageable to source query.
-            return dslPage(select.get().fetch(), pageable, dslCountQuery(countSql, bindValues));
+            return dslPage(select.get().fetch(), pageable, countSql, bindValues);
         }
         dslPageable(select, pageable, applySort);//apply spring data pageable to source query.
         return dslPage(select.get().fetch(), pageable, select);
