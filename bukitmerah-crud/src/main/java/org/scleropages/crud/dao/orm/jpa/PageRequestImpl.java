@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * user code please don't use this class. use {@link Pages#serializablePageable(Pageable)} to create this for serialize.
@@ -160,6 +161,7 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
         public String toString() {
             return recoverSortIfNecessary().toString();
         }
+
 
         public List<OrderImpl> getOrderImpls() {
             return orderImpls;
@@ -311,10 +313,6 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
         }
     }
 
-    protected PageRequestImpl(int page, int size, Sort sort) {
-        super(page, size, sort);
-    }
-
     @Override
     @Transient
     public Sort getSort() {
@@ -354,6 +352,49 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
         return recoverPageableIfNecessary().toString();
     }
 
+
+    @Override
+    @Transient
+    public int getPageNumber() {
+        return recoverPageableIfNecessary().getPageNumber();
+    }
+
+    @Override
+    @Transient
+    public long getOffset() {
+        return recoverPageableIfNecessary().getOffset();
+    }
+
+    @Override
+    public boolean hasPrevious() {
+        return recoverPageableIfNecessary().hasPrevious();
+    }
+
+    @Override
+    public Pageable previousOrFirst() {
+        return recoverPageableIfNecessary().previousOrFirst();
+    }
+
+    @Override
+    public boolean isPaged() {
+        return recoverPageableIfNecessary().isPaged();
+    }
+
+    @Override
+    public boolean isUnpaged() {
+        return recoverPageableIfNecessary().isUnpaged();
+    }
+
+    @Override
+    public Sort getSortOr(Sort sort) {
+        return recoverPageableIfNecessary().getSortOr(sort);
+    }
+
+    @Override
+    public Optional<Pageable> toOptional() {
+        return recoverPageableIfNecessary().toOptional();
+    }
+
     public int getPageNoImpl() {
         return pageNoImpl;
     }
@@ -390,29 +431,7 @@ public class PageRequestImpl extends PageRequest implements Pageable, Serializab
     @Override
     @Transient
     public int getPageSize() {
-        return super.getPageSize();
-    }
-
-    @Override
-    @Transient
-    public int getPageNumber() {
-        return super.getPageNumber();
-    }
-
-    @Override
-    @Transient
-    public long getOffset() {
-        return super.getOffset();
-    }
-
-    @Override
-    public boolean hasPrevious() {
-        return super.hasPrevious();
-    }
-
-    @Override
-    public Pageable previousOrFirst() {
-        return super.previousOrFirst();
+        return recoverPageableIfNecessary().getPageSize();
     }
 
     public static void main(String[] args) {
