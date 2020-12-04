@@ -55,20 +55,29 @@ public abstract class Reflections2 {
         return newInstance(getClass(clazz));
     }
 
+    public static Object newInstance(String clazz, ClassLoader classLoader) {
+        return newInstance(getClass(clazz, classLoader));
+    }
+
     public static Class<?> getClass(String name) {
-        return CLASS_CACHE.computeIfAbsent(name, s -> {
-            try {
-                return ClassUtils.forName(name, Reflections.class.getClassLoader());
-            } catch (ClassNotFoundException e) {
-                throw new IllegalArgumentException(e);
-            }
-        });
+        return getClass(name, Reflections.class.getClassLoader());
     }
 
     @SuppressWarnings("unchecked")
     public static <T> T newInstance(Class<T> clazz) {
         return (T) CONSTRUCTOR_ACCESS_CACHE.computeIfAbsent(clazz, s -> ConstructorAccess.get(clazz)).newInstance();
     }
+
+    public static Class<?> getClass(String name, ClassLoader classLoader) {
+        return CLASS_CACHE.computeIfAbsent(name, s -> {
+            try {
+                return ClassUtils.forName(name, classLoader);
+            } catch (ClassNotFoundException e) {
+                throw new IllegalArgumentException(e);
+            }
+        });
+    }
+
 
     public static void invokeSet(Object target, String expression, Object value) {
         if (-1 == StringUtils.indexOf(expression, DEFAULT_NESTED_PROPERTY_SEPARATOR)) {
@@ -184,11 +193,11 @@ public abstract class Reflections2 {
     }
 
     protected static FieldAccess getFieldAccess(Class<?> clazz) {
-        return FIELD_ACCESS_CACHE.computeIfAbsent(clazz,s-> FieldAccess.get(clazz));
+        return FIELD_ACCESS_CACHE.computeIfAbsent(clazz, s -> FieldAccess.get(clazz));
     }
 
     private static MethodAccess getMethodAccess(Class<?> clazz) {
-        return METHOD_ACCESS_CACHE.computeIfAbsent(clazz,s-> MethodAccess.get(clazz));
+        return METHOD_ACCESS_CACHE.computeIfAbsent(clazz, s -> MethodAccess.get(clazz));
     }
 
     @SuppressWarnings("unchecked")
