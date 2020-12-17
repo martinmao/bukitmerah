@@ -21,7 +21,6 @@ import com.alibaba.fastjson.parser.Feature;
 import com.alibaba.fastjson.parser.JSONLexer;
 import com.alibaba.fastjson.parser.JSONToken;
 import com.alibaba.fastjson.parser.ParserConfig;
-import com.alibaba.fastjson.serializer.SerializeConfig;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -79,12 +78,9 @@ public abstract class JsonMapper2 {
      * @param object
      * @return json text or null (any fault)
      */
-    public static String toJson(Object object) {
+    public static String toJson(Object object,SerializerFeature... features) {
         try {
-            SerializeConfig config = new SerializeConfig();
-
-
-            return JSON.toJSONString(object, DEFAULT_GENERATE_FEATURE, new SerializerFeature[0]);
+            return JSON.toJSONString(object, DEFAULT_GENERATE_FEATURE, features);
         } catch (Exception e) {
             logger.warn("write to json string error:" + object, e);
             return null;
