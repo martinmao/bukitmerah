@@ -1,0 +1,132 @@
+{
+  "groups": [
+    {
+      "name": "uid",
+      "description": "unique id generator"
+    },
+    {
+      "name": "uid.uid-generator",
+      "type": "org.scleropages.crud.autoconfigure.UidGeneratorConfigureProperties",
+      "sourceType": "org.scleropages.crud.autoconfigure.UidGeneratorConfigureProperties",
+      "description": "uid-generator settings."
+    },
+    {
+      "name": "uid.uid-generator.cached",
+      "type": "org.scleropages.crud.autoconfigure.UidGeneratorConfigureProperties$CachedProperties",
+      "sourceType": "org.scleropages.crud.autoconfigure.UidGeneratorConfigureProperties",
+      "sourceMethod": "getCached()",
+      "description": "cached settings."
+    },
+    {
+      "name": "uid.leaf-segment",
+      "type": "org.scleropages.crud.autoconfigure.LeafSegmentConfigureProperties",
+      "sourceType": "org.scleropages.crud.autoconfigure.LeafSegmentConfigureProperties",
+      "description": "leaf-segment settings."
+    }
+  ],
+  "properties": [
+    {
+      "name": "uid.enabled",
+      "type": "java.lang.Boolean",
+      "description": "enable unique id generator."
+    },
+    {
+      "name": "uid.provider.enabled",
+      "type": "java.lang.String",
+      "description": "provider of unique id generator enabled."
+    },
+    {
+      "name": "uid.provider.default",
+      "type": "java.lang.String",
+      "description": "default provider for unique id generator."
+    },
+    {
+      "name": "uid.uid-generator.time_bits",
+      "type": "java.lang.Integer",
+      "sourceType": "org.scleropages.crud.autoconfigure.UidGeneratorConfigureProperties",
+      "description": "增量时间位数, 相对于时间纪元起点 {@link #epochStr} 的增量值(单位为秒). 默认28位, 即2^28=268435456秒,可表示最多268435456/(60*60*24*365)=8.5年"
+    },
+    {
+      "name": "uid.uid-generator.worker_bits",
+      "type": "java.lang.Integer",
+      "sourceType": "org.scleropages.crud.autoconfigure.UidGeneratorConfigureProperties",
+      "description": "机器id位数,每次启动时会自增该值,默认22位，即2^22=4194304次重启"
+    },
+    {
+      "name": "uid.uid-generator.seq_bits",
+      "type": "java.lang.Integer",
+      "sourceType": "org.scleropages.crud.autoconfigure.UidGeneratorConfigureProperties",
+      "description": "一秒内自增序列位数，默认13位，即2^13=1秒内最多支持8192并发"
+    },
+    {
+      "name": "uid.uid-generator.epoch_str",
+      "type": "java.lang.String",
+      "sourceType": "org.scleropages.crud.autoconfigure.UidGeneratorConfigureProperties",
+      "description": "时间纪元起点,默认 2021-07-01"
+    },
+    {
+      "name": "uid.uid-generator.cached_enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "org.scleropages.crud.autoconfigure.UidGeneratorConfigureProperties",
+      "description": "是否启用CachedUidGenerator"
+    },
+    {
+      "name": "uid.uid-generator.cached.boost_power",
+      "type": "java.lang.Integer",
+      "sourceType": "org.scleropages.crud.autoconfigure.UidGeneratorConfigureProperties$CachedProperties",
+      "description": "RingBuffer size扩容参数, 可提高UID生成的吞吐量. 默认:3， 原bufferSize=8192, 扩容后bufferSize= 8192 << 3 = 65536"
+    },
+    {
+      "name": "uid.uid-generator.cached.padding_factor",
+      "type": "java.lang.Integer",
+      "sourceType": "org.scleropages.crud.autoconfigure.UidGeneratorConfigureProperties$CachedProperties",
+      "description": "指定何时向RingBuffer中填充UID, 取值为百分比(0, 100), 默认为50. 举例: bufferSize=1024, paddingFactor=50 -> threshold=1024 * 50 / 100 = 512.当环上可用UID数量 < 512时, 将自动对RingBuffer进行填充补全"
+    },
+    {
+      "name": "uid.leaf-segment.biz_tags",
+      "type": "java.lang.String",
+      "sourceType": "org.scleropages.crud.autoconfigure.LeafSegmentConfigureProperties",
+      "description": "comma splits biz tags configure. format: <BIZ_TAG>[:STEP]... eg: biz_tag1:20,biz_tag2:1000,biz_tag3:200, default step =50"
+    }
+  ],
+  "hints": [
+    {
+      "name": "uid.provider.enabled",
+      "values": [
+        {
+          "value": "uid-generator",
+          "description": "enable uid-generator: https://github.com/baidu/uid-generator."
+        },
+        {
+          "value": "leaf-segment",
+          "description": "enable leaf segment: https://github.com/Meituan-Dianping/Leaf."
+        },
+        {
+          "value": "leaf-snowflake",
+          "description": "enable leaf snowflake: https://github.com/Meituan-Dianping/Leaf."
+        },
+        {
+          "value": "all",
+          "description": "both enable uid-generator and leaf-all."
+        }
+      ]
+    },
+    {
+      "name": "uid.provider.default",
+      "values": [
+        {
+          "value": "uid-generator",
+          "description": "uid-generator: https://github.com/baidu/uid-generator."
+        },
+        {
+          "value": "leaf-segment",
+          "description": "leaf segment: https://github.com/Meituan-Dianping/Leaf."
+        },
+        {
+          "value": "leaf-snowflake",
+          "description": "leaf snowflake: https://github.com/Meituan-Dianping/Leaf."
+        }
+      ]
+    }
+  ]
+}

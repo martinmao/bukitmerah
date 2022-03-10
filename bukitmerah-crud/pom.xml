@@ -62,4 +62,70 @@
             <scope>compile</scope>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jooq</groupId>
+                <artifactId>jooq-codegen-maven</artifactId>
+                <version>3.12.3</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jooq</groupId>
+                        <artifactId>jooq-meta-extensions</artifactId>
+                        <version>3.12.3</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>javax.persistence</groupId>
+                        <artifactId>javax.persistence-api</artifactId>
+                        <version>2.2</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>javax.validation</groupId>
+                        <artifactId>validation-api</artifactId>
+                        <version>2.0.1.Final</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <generator>
+                        <generate>
+                            <!--With jOOQ 3.9, support for JSR-310 java.time types has been added to the jOOQ API and to the code generator. Users of Java 8 can now specify that the jOOQ code generator should prefer JSR 310 types over their equivalent JDBC types.-->
+                            <!-- java.time.LocalDate instead of java.sql.Date-->
+                            <!-- java.time.LocalTime instead of java.sql.Time-->
+                            <!-- java.time.LocalDateTime instead of java.sql.Timestamp-->
+                            <javaTimeTypes>false</javaTimeTypes>
+                            <pojos>false</pojos>
+                            <daos>false</daos>
+                        </generate>
+                        <database>
+                            <name>org.jooq.meta.extensions.jpa.JPADatabase</name>
+                            <properties>
+                                <!-- A comma separated list of Java packages, that contain your entities -->
+                                <property>
+                                    <key>packages</key>
+                                    <value>org.scleropages.crud</value>
+                                </property>
+                                <!-- Whether JPA 2.1 AttributeConverters should be auto-mapped to jOOQ Converters.
+                                Custom <forcedType/> configurations will have a higher priority than these auto-mapped converters. This defaults to true. -->
+                                <property>
+                                    <key>useAttributeConverters</key>
+                                    <value>true</value>
+                                </property>
+                                <!-- The default schema for unqualified objects:
+                                - public: all unqualified objects are located in the PUBLIC (upper case) schema - none: all unqualified objects are located in the default schema (default)
+                                This autoconfigure can be overridden with the schema mapping feature -->
+                                <property>
+                                    <key>unqualifiedSchema</key>
+                                    <value>none</value>
+                                </property>
+                            </properties>
+                        </database>
+                        <target>
+                            <packageName>org.scleropages.crud.jooq</packageName>
+                            <directory>target/generated-sources/jooq</directory>
+                        </target>
+                    </generator>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

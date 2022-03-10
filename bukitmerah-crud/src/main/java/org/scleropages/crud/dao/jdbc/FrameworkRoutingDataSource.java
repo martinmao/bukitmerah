@@ -72,28 +72,28 @@ public class FrameworkRoutingDataSource extends AbstractRoutingDataSource implem
         super.afterPropertiesSet();
     }
 
-    private Map<Object, Object> lookupedDataSources;
+    private Map<Object, Object> detectedDataSources;
 
     private String defaultDataSourceBeanId;
 
     protected Map<Object, Object> lookupDataSources() {
         if (!autoLookupDataSources)
             return null;
-        Map<String, DataSource> lookupedBeans = applicationContext.getBeansOfType(DataSource.class);
-        Assert.notEmpty(lookupedBeans, "no data-source found from spring context.");
-        lookupedDataSources = Maps.newHashMap();
-        lookupedBeans.forEach((s, dataSource) -> {
+        Map<String, DataSource> dataSources = applicationContext.getBeansOfType(DataSource.class);
+        Assert.notEmpty(dataSources, "no data-source found from spring context.");
+        detectedDataSources = Maps.newHashMap();
+        dataSources.forEach((s, dataSource) -> {
             if (!(dataSource instanceof FrameworkRoutingDataSource))
-                lookupedDataSources.put(s, dataSource);
+                detectedDataSources.put(s, dataSource);
         });
-        logger.debug("successfully looked up {} data-sources.....", lookupedDataSources.keySet());
+        logger.debug("successfully detected {} data-sources.....", detectedDataSources.keySet());
 
         Assert.hasText(defaultDataSourceBeanId, "defaultDataSourceBeanId must not be null.");
-        Assert.isTrue(lookupedDataSources.containsKey(defaultDataSourceBeanId), "no default data-source found by given id: " + defaultDataSourceBeanId);
-        DataSource defaultDataSource = (DataSource) lookupedDataSources.get(defaultDataSourceBeanId);
+        Assert.isTrue(detectedDataSources.containsKey(defaultDataSourceBeanId), "no default data-source found by given id: " + defaultDataSourceBeanId);
+        DataSource defaultDataSource = (DataSource) detectedDataSources.get(defaultDataSourceBeanId);
         setDefaultTargetDataSource(defaultDataSource);
         logger.debug("use {} as default data-source.", defaultDataSourceBeanId);
-        return lookupedDataSources;
+        return detectedDataSources;
     }
 
     public void setDefaultDataSourceBeanId(String defaultDataSourceBeanId) {

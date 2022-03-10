@@ -36,6 +36,7 @@ import org.springframework.util.Assert;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Attribute.PersistentAttributeType;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -697,6 +698,15 @@ public interface JooqRepository<T extends Table, R extends Record, E> {
      */
     default <T> Param<T> dslInline(T value) {
         return DSL.inline(value);
+    }
+
+
+    /**
+     * return now timestamp.
+     * @return
+     */
+    default Field<Timestamp> dslNow() {
+        return DSL.now();
     }
 
     /**
