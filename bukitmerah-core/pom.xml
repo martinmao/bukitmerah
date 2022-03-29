@@ -11,7 +11,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>bukitmerah-core</artifactId>
     <properties>
-        <commons-beanutils.version>1.9.2</commons-beanutils.version>
+        <commons-beanutils.version>1.9.4</commons-beanutils.version>
         <shiro.version>1.4.2</shiro.version>
         <reflectasm.version>1.11.9</reflectasm.version>
         <fastjson.version>1.2.68</fastjson.version>
